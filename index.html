@@ -567,7 +567,7 @@ function updateVoiceNote(){
 
 // ---------- mikrofon (talegjenkjenning) ----------
 const SRC = window.SpeechRecognition || window.webkitSpeechRecognition;
-let micBlocked = !SRC, listening = false, REC = null;
+let micBlocked = !SRC, listening = false, REC = null, micErr = '';
 function listen(onText, onFail){
   if(!SRC){ micBlocked=true; onFail('none'); return; }
   try{ speechSynthesis.cancel(); }catch(e){}
@@ -577,10 +577,10 @@ function listen(onText, onFail){
     r.lang = VOICE && /^en/i.test(VOICE.lang) ? VOICE.lang : 'en-GB';
     r.interimResults=false; r.maxAlternatives=5; r.continuous=false;
     r.onresult = e=>{ const alts=[]; for(const res of e.results) for(let i=0;i<res.length;i++) alts.push(res[i].transcript); fin(onText, alts); };
-    r.onerror = e=>fin(onFail, e.error||'error');
+    r.onerror = e=>{ micErr = e.error||'error'; fin(onFail, micErr); };
     r.onend = ()=>fin(onFail, 'no-speech');
     REC=r; listening=true; r.start();
-  }catch(e){ fin(onFail, 'not-allowed'); }
+  }catch(e){ micErr = 'start: '+(e&&e.name||'error'); fin(onFail, 'not-allowed'); }
 }
 function stopListen(){ try{ REC && REC.abort(); }catch(e){} listening=false; }
 const BLOCK_ERR = ['not-allowed','service-not-allowed','audio-capture','none','network','language-not-supported','error'];
@@ -662,7 +662,16 @@ function starPill(){ return `<span class="pill" aria-label="Stjerner">${ICON.sta
 // ---------- hjem ----------
 function micStatus(){
   if(!SRC) return 'Denne nettleseren kan ikke høre tale. «Si det!» bruker da en «Jeg sa det!»-knapp.';
-  if(micBlocked) return 'Mikrofonen er ikke tillatt her. «Si det!» bruker da en «Jeg sa det!»-knapp som en voksen kan trykke.';
+  if(micBlocked){
+    const why = {
+      'not-allowed':'Nettleseren har sagt nei til mikrofonen. Gi tillatelse til mikrofon for denne siden (se under), og trykk «Prøv igjen».',
+      'service-not-allowed':'Talegjenkjenning er slått av. På iPhone: Innstillinger → Generelt → Tastatur → slå på «Diktering». Åpne siden i Safari, ikke fra hjemskjermen.',
+      'audio-capture':'Fant ingen mikrofon. Sjekk at ingen andre apper bruker den.',
+      'network':'Talegjenkjenning trenger internett. Sjekk nettet og prøv igjen.',
+      'language-not-supported':'Engelsk talegjenkjenning finnes ikke i denne nettleseren. Prøv Chrome eller Safari.'
+    }[micErr] || 'Mikrofonen virker ikke her.';
+    return why + (micErr?` (kode: ${micErr})`:'') + ' Til da bruker «Si det!» en «Jeg sa det!»-knapp.';
+  }
   return 'Trykk «Test» og si «hello».';
 }
 function renderHome(){
@@ -707,8 +716,9 @@ function renderHome(){
     <p class="voicenote">Tydeligst lyd: <b>Microsoft Edge</b> på PC/Mac (velg Libby, Sonia eller Ryan «Natural», engelsk UK). På iPad: last ned <b>Kate eller Daniel (Forbedret)</b> under Innstillinger → Tilgjengelighet → Opplest innhold → Stemmer → Engelsk.</p>
   </section>
   <section class="progress voicebox">
-    <div class="row"><h2>Mikrofon</h2>${SRC&&!micBlocked?'<button class="btn small" data-act="testmic">Test</button>':''}</div>
+    <div class="row"><h2>Mikrofon</h2>${SRC?`<button class="btn small" data-act="testmic">${micBlocked?'Prøv igjen':'Test'}</button>`:''}</div>
     <p class="voicenote" id="micnote">${micStatus()}</p>
+    ${micBlocked&&SRC?`<p class="voicenote"><b>iPhone/iPad:</b> Bruk Safari, ikke ikonet på hjemskjermen. Trykk «aA» i adressefeltet → Nettstedsinnstillinger → Mikrofon → Tillat. Sjekk også Innstillinger → Generelt → Tastatur → «Diktering» er på.<br><b>Android:</b> Bruk Chrome. Trykk ikonet til venstre for adressen → Tillatelser → Mikrofon → Tillat.</p>`:''}
   </section>`;
   fillVoiceSelect();
 }
@@ -943,6 +953,7 @@ app.addEventListener('click', e=>{
   else if(act==='adult'){ const r=document.getElementById('adultans'); if(r) r.hidden=!r.hidden; }
   else if(act==='testvoice'){ ttsOK=null; say('Hello! How are you?'); setTimeout(updateVoiceNote,2700); const n=document.getElementById('voicenote'); if(n) n.textContent='Tester …'; }
   else if(act==='testmic'){
+    micBlocked = !SRC; micErr='';
     const n=document.getElementById('micnote'); if(n) n.innerHTML='<b>Jeg lytter …</b> Si «hello».';
     listen(alts=>{ const m=document.getElementById('micnote'); if(m) m.innerHTML=`Mikrofonen virker! Jeg hørte: <b>«${esc(alts[0]||'')}»</b>`; },
       err=>{ if(BLOCK_ERR.includes(err)) micBlocked=true; const m=document.getElementById('micnote'); if(m) m.textContent = BLOCK_ERR.includes(err) ? micStatus() : 'Jeg hørte ingenting. Prøv igjen.'; if(micBlocked) renderHome(); });
