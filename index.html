@@ -1,0 +1,980 @@
+<!doctype html><html lang="no"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<link rel="manifest" href="manifest.json"><link rel="apple-touch-icon" href="icon-180.png"><meta name="theme-color" content="#FF5C8A">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="English Squish">
+<style>:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style></head><body>
+<title>English Squish</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Grandstander:wght@700;800&display=swap">
+<style>
+/* Layout: samme lekesøyle som Lesesquish; tykke trykk-brikker; lytt først, så svar */
+:root{
+  --bg:#EDF0FF; --paper:#FFFFFF; --fg:#26214A; --muted:#67638C;
+  --accent:#FF5C8A; --star:#F5A800; --good:#1F9D63; --bad:#E5484D;
+  --line:#CDD3F3; --locked:#DCE0F5; --tile:#FFFFFF; --tile-edge:#C3C9EC; --soft:#E2E6FF; --en:#3D7BFF;
+  --display:"Grandstander","Comic Sans MS","Trebuchet MS",system-ui,sans-serif;
+  --read:"Andika","Verdana","Segoe UI",system-ui,sans-serif;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#17152B; --paper:#221F3D; --fg:#F2F0FF; --muted:#A9A5CF;
+  --accent:#FF7AA2; --star:#FFC83D; --good:#3DD68C; --bad:#FF6B6F;
+  --line:#3A3664; --locked:#34305A; --tile:#2C2850; --tile-edge:#0F0D20; --soft:#2A2650; --en:#7FA8FF; color-scheme:dark }}
+:root[data-theme="dark"]{
+  --bg:#17152B; --paper:#221F3D; --fg:#F2F0FF; --muted:#A9A5CF;
+  --accent:#FF7AA2; --star:#FFC83D; --good:#3DD68C; --bad:#FF6B6F;
+  --line:#3A3664; --locked:#34305A; --tile:#2C2850; --tile-edge:#0F0D20; --soft:#2A2650; --en:#7FA8FF; color-scheme:dark }
+
+html,body{height:100%}
+body{background:var(--bg);color:var(--fg);font-family:var(--read);font-size:17px;-webkit-tap-highlight-color:transparent;overflow-x:hidden}
+#app{max-width:560px;margin:0 auto;box-sizing:border-box;min-height:100%;display:flex;flex-direction:column;gap:18px;
+  padding-block:14px 32px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance;line-height:1.1}
+p{margin:0}
+
+.bar{display:flex;align-items:center;gap:10px}
+.bar h1{font-size:30px;flex:1;letter-spacing:.5px}
+.bar h1 span{color:var(--accent)}
+.pill{display:inline-flex;align-items:center;gap:6px;background:var(--paper);border-radius:999px;padding:6px 12px 6px 8px;font-family:var(--display);font-size:18px;font-variant-numeric:tabular-nums;box-shadow:0 3px 0 var(--tile-edge)}
+.pill svg{width:22px;height:22px}
+.icon-btn{width:44px;height:44px;border-radius:14px;background:var(--paper);display:grid;place-items:center;box-shadow:0 3px 0 var(--tile-edge)}
+.icon-btn svg{width:24px;height:24px}
+.dots{flex:1;display:flex;gap:6px;justify-content:center}
+.dots i{width:12px;height:12px;border-radius:50%;background:var(--line)}
+.dots i.done{background:var(--good)}
+.dots i.now{background:var(--accent);transform:scale(1.25)}
+
+.progress{background:var(--paper);border-radius:22px;padding:16px;display:flex;flex-direction:column;gap:10px}
+.progress .row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.progress h2{font-size:20px}
+.progress small{color:var(--muted);font-size:15px}
+.meter{height:16px;border-radius:99px;background:var(--soft);overflow:hidden}
+.meter b{display:block;height:100%;background:var(--star);border-radius:99px;transition:width .5s}
+.gift-cta{display:flex;align-items:center;gap:12px;background:var(--accent);color:#fff;border-radius:18px;padding:12px 16px;font-family:var(--display);font-size:20px;box-shadow:0 5px 0 color-mix(in srgb,var(--accent) 60%,#000);animation:wiggle 1.6s infinite}
+.gift-cta svg{width:44px;height:44px;flex:none}
+
+.label{font-family:var(--display);font-size:14px;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted)}
+.modes{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.mode{background:var(--tile);border-radius:20px;padding:14px;text-align:left;display:flex;flex-direction:column;gap:6px;box-shadow:0 5px 0 var(--tile-edge);transition:transform .08s}
+.mode:active,.tile:active,.btn:active,.mic:active{transform:translateY(4px);box-shadow:0 1px 0 var(--tile-edge)}
+.mode .glyph{font-family:var(--read);font-weight:700;font-size:30px;line-height:1;height:40px;display:flex;align-items:center;gap:6px}
+.mode .glyph small{font-size:22px}
+.mode h3{font-size:18px}
+.mode p{font-size:14px;color:var(--muted)}
+.m1 .glyph{color:#3D7BFF}.m2 .glyph{color:#14A88A}.m3 .glyph{color:var(--accent)}.m4 .glyph{color:#C27C00}
+:root[data-theme="dark"] .m4 .glyph{color:var(--star)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .m4 .glyph{color:var(--star)}}
+.levels{display:flex;gap:8px;flex-wrap:wrap}
+.chip{padding:8px 14px;border-radius:999px;background:var(--paper);font-weight:700;box-shadow:0 3px 0 var(--tile-edge);font-size:15px}
+.chip[aria-pressed="true"]{background:var(--fg);color:var(--bg);box-shadow:none}
+.foot{display:flex;flex-wrap:wrap;gap:8px}
+.btn{padding:12px 18px;border-radius:16px;background:var(--paper);font-family:var(--display);font-size:18px;box-shadow:0 4px 0 var(--tile-edge);display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.btn svg{width:24px;height:24px}
+.btn.primary{background:var(--accent);color:#fff;box-shadow:0 4px 0 color-mix(in srgb,var(--accent) 60%,#000)}
+.btn.small{font-family:var(--read);font-weight:700;font-size:15px;padding:9px 14px}
+.btn.wide{width:100%}
+.btn.soft{background:var(--soft);box-shadow:none}
+
+.stage{background:var(--paper);border-radius:26px;padding:22px 16px;display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
+.ask{font-family:var(--display);font-size:22px}
+.eng{font-family:var(--read);font-weight:700;font-size:24px;color:var(--en)}
+.pic{font-size:96px;line-height:1.05;user-select:none;display:grid;place-items:center;min-height:100px}
+.hear{display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap}
+.speak{width:84px;height:84px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;box-shadow:0 5px 0 color-mix(in srgb,var(--accent) 60%,#000)}
+.speak svg{width:42px;height:42px}
+.speak.sm{width:52px;height:52px}.speak.sm svg{width:26px;height:26px}
+.slow{width:52px;height:52px;border-radius:50%;background:var(--soft);font-size:28px;display:grid;place-items:center}
+.fb{min-height:26px;font-weight:700;font-size:19px;color:var(--good)}
+.fb .no{color:var(--muted);font-weight:400}
+.opts{display:grid;gap:12px}
+.opts.four{grid-template-columns:1fr 1fr}
+.opts.three{grid-template-columns:repeat(3,1fr)}
+.tile{background:var(--tile);border-radius:20px;box-shadow:0 5px 0 var(--tile-edge);font-family:var(--read);font-weight:700;font-size:58px;min-height:96px;display:grid;place-items:center;transition:transform .08s,background .2s;min-width:0}
+.tile.lab{display:flex;flex-direction:column;justify-content:center;gap:6px;padding:12px 6px;font-size:46px;min-height:118px}
+.tile.lab span.t{font-size:15px;line-height:1.2;color:var(--muted);text-wrap:balance}
+.tile.lab span.t.big{font-size:22px;color:var(--fg)}
+.tile.ok{background:var(--good);color:#fff;box-shadow:0 5px 0 color-mix(in srgb,var(--good) 55%,#000);animation:pop .4s}
+.tile.ok span.t{color:#fff}
+.tile.no{opacity:.35;animation:shake .4s}
+.tile:disabled{cursor:default}
+.sw{display:inline-block;width:64px;height:64px;border-radius:50%;border:3px solid rgba(0,0,0,.15)}
+.pic .sw{width:96px;height:96px}
+.num{font-family:var(--display);font-size:64px;line-height:1;font-variant-numeric:tabular-nums}
+.pic .num{font-size:110px;color:var(--en)}
+.nw{font-family:var(--display);font-size:24px;line-height:1.15;color:var(--fg);text-wrap:balance;padding:0 6px;overflow-wrap:anywhere}
+.pic .nw{font-size:clamp(34px,10vw,48px);display:inline-block;background:var(--soft);border-radius:18px;padding:14px 22px}
+.practised{font-size:15px;color:var(--muted)}
+
+/* lytt og svar */
+.qbox{width:100%;box-sizing:border-box;background:var(--soft);border-radius:18px;padding:14px;display:flex;flex-direction:column;align-items:center;gap:10px}
+.qbox .row{display:flex;align-items:center;gap:12px;justify-content:center;flex-wrap:wrap}
+.qno{font-size:17px;color:var(--muted)}
+.storytext{width:100%;box-sizing:border-box;text-align:left;background:var(--soft);border-radius:16px;padding:12px 14px;font-size:18px;line-height:1.5;display:flex;flex-direction:column;gap:8px}
+.storytext .en{color:var(--en);font-weight:700}
+.storytext .nor{color:var(--muted)}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+
+/* si det */
+.mic{width:110px;height:110px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center;box-shadow:0 6px 0 color-mix(in srgb,var(--accent) 60%,#000)}
+.mic svg{width:52px;height:52px}
+.mic.on{background:var(--good);box-shadow:0 0 0 0 color-mix(in srgb,var(--good) 50%,transparent);animation:pulse 1.2s infinite}
+.status{min-height:24px;font-size:17px;color:var(--muted)}
+.status b{color:var(--fg)}
+.hintword{font-family:var(--read);font-weight:700;font-size:40px;color:var(--en)}
+
+.center{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
+.bigstars{display:flex;gap:4px;justify-content:center;flex-wrap:wrap}
+.bigstars svg{width:40px;height:40px}
+.gift{width:200px;height:200px;filter:drop-shadow(0 8px 0 rgba(0,0,0,.12))}
+.gift svg{width:100%;height:100%}
+.gift.shake{animation:giftshake .45s}
+.taps{display:flex;gap:10px}.taps i{width:16px;height:16px;border-radius:50%;background:var(--line)}.taps i.on{background:var(--accent)}
+.reveal{position:relative;display:grid;place-items:center;width:240px;height:240px}
+.rays{position:absolute;inset:0;border-radius:50%;background:repeating-conic-gradient(color-mix(in srgb,var(--star) 45%,transparent) 0 10deg,transparent 10deg 20deg);animation:spin 12s linear infinite;mask:radial-gradient(circle,#000 30%,transparent 70%);-webkit-mask:radial-gradient(circle,#000 30%,transparent 70%)}
+.sq-big{position:relative;width:200px;height:200px;animation:appear .6s cubic-bezier(.3,1.6,.5,1)}
+.sq-big svg,.card svg{width:100%;height:100%;overflow:visible}
+.rar{font-weight:700;font-size:14px;padding:4px 12px;border-radius:999px;background:var(--soft)}
+.rar.r1{background:#D9E8FF;color:#1E4FB3}.rar.r2{background:#FFF0B3;color:#7A5500}
+.squish{animation:squish .5s}
+
+.coll{display:grid;grid-template-columns:repeat(auto-fill,minmax(98px,1fr));gap:12px}
+.card{background:var(--paper);border-radius:18px;padding:10px 6px 8px;display:flex;flex-direction:column;align-items:center;gap:4px}
+.card .art{width:76px;height:76px}
+.card span{font-size:13px;font-weight:700;line-height:1.2;text-align:center}
+.card.locked span{color:var(--muted)}
+
+.nospeech{background:var(--paper);border:2px dashed var(--accent);border-radius:18px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;font-size:15px}
+.adultans{font-family:var(--read);font-weight:700;font-size:22px}
+.voicebox select{font:inherit;font-size:16px;padding:10px 12px;border-radius:12px;border:2px solid var(--line);background:var(--bg);color:var(--fg);width:100%;max-width:100%}
+.voicenote b{color:var(--fg)}
+.voicenote{color:var(--muted);font-size:14px}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--fg);color:var(--bg);padding:12px 20px;border-radius:16px;font-family:var(--display);font-size:18px;z-index:20;animation:up .3s;max-width:calc(100% - 48px);text-align:center}
+.plus{position:fixed;font-family:var(--display);font-size:26px;color:var(--star);pointer-events:none;z-index:30;animation:float 1s forwards;text-shadow:0 2px 0 rgba(0,0,0,.15)}
+.confetti{position:fixed;top:-12px;width:10px;height:14px;border-radius:3px;z-index:25;pointer-events:none;animation:fall linear forwards}
+
+@keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.15)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-8px)}75%{transform:translateX(8px)}}
+@keyframes giftshake{0%,100%{transform:rotate(0)}20%{transform:rotate(-10deg) scale(1.05)}50%{transform:rotate(9deg) scale(1.08)}80%{transform:rotate(-5deg)}}
+@keyframes wiggle{0%,80%,100%{transform:rotate(0)}85%{transform:rotate(-2deg)}90%{transform:rotate(2deg)}95%{transform:rotate(-1deg)}}
+@keyframes squish{0%{transform:scale(1)}30%{transform:scale(1.28,.72)}55%{transform:scale(.88,1.14)}75%{transform:scale(1.06,.95)}100%{transform:scale(1)}}
+@keyframes appear{from{transform:scale(.2) rotate(-20deg);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes up{from{transform:translate(-50%,20px);opacity:0}}
+@keyframes float{to{transform:translateY(-60px);opacity:0}}
+@keyframes fall{to{transform:translateY(105vh) rotate(720deg)}}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--good) 55%,transparent)}100%{box-shadow:0 0 0 26px transparent}}
+@media (prefers-reduced-motion: reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important;transition:none!important}}
+</style>
+
+<div id="app"></div>
+
+<script>
+// ---------- innhold (LK20 engelsk, mål etter 2. og 4. trinn: lytte, forstå enkle ord, beskjeder og spørsmål, svare muntlig) ----------
+// ord: [engelsk (alternative svar med |), bilde (emoji, #farge eller tall), norsk]
+const T = {
+  colours:{no:'Farger',q:'What colour is this?',qn:'Hvilken farge er dette?',items:[
+    ['red','🔴','rød'],['blue','🔵','blå'],['green','🟢','grønn'],['yellow','🟡','gul'],['orange','🟠','oransje'],['purple','🟣','lilla'],
+    ['brown','🟤','brun'],['black','⚫','svart'],['white','⚪','hvit'],['pink','#FF8FC8','rosa'],['grey|gray','#9A9AA6','grå']]},
+  numbers:{no:'Tall',q:'What number is this?',qn:'Hvilket tall er dette?',items:[
+    ['one','1','en'],['two','2','to'],['three','3','tre'],['four','4','fire'],['five','5','fem'],['six','6','seks'],['seven','7','sju'],
+    ['eight','8','åtte'],['nine','9','ni'],['ten','10','ti'],['eleven','11','elleve'],['twelve','12','tolv'],['thirteen','13','tretten'],
+    ['fourteen','14','fjorten'],['fifteen','15','femten'],['sixteen','16','seksten'],['seventeen','17','sytten'],['eighteen','18','atten'],
+    ['nineteen','19','nitten'],['twenty','20','tjue'],['thirty','30','tretti'],['forty','40','førti'],['fifty','50','femti'],['one hundred|hundred','100','hundre']]},
+  animals:{no:'Dyr',q:'What is this?',qn:'Hva er dette?',items:[
+    ['cat','🐱','katt'],['dog','🐶','hund'],['horse','🐴','hest'],['cow','🐄','ku'],['pig','🐷','gris'],['sheep','🐑','sau'],['bird','🐦','fugl'],
+    ['fish','🐟','fisk'],['rabbit|bunny','🐰','kanin'],['mouse','🐭','mus'],['duck','🦆','and'],['frog','🐸','frosk'],['bear','🐻','bjørn'],
+    ['lion','🦁','løve'],['elephant','🐘','elefant'],['monkey','🐵','ape'],['snake','🐍','slange'],['owl','🦉','ugle'],
+    ['tiger','🐯','tiger'],['giraffe','🦒','sjiraff'],['zebra','🦓','sebra'],['penguin','🐧','pingvin'],['chicken|hen','🐔','høne'],
+    ['butterfly','🦋','sommerfugl'],['spider','🕷️','edderkopp'],['bee','🐝','bie'],['whale','🐳','hval'],['shark','🦈','hai'],
+    ['turtle|tortoise','🐢','skilpadde'],['fox','🦊','rev'],['wolf','🐺','ulv'],['crocodile','🐊','krokodille'],['octopus','🐙','blekksprut'],['camel','🐫','kamel']]},
+  food:{no:'Mat',q:'What is this?',qn:'Hva er dette?',items:[
+    ['apple','🍎','eple'],['banana','🍌','banan'],['bread','🍞','brød'],['milk','🥛','melk'],['cheese','🧀','ost'],['egg','🥚','egg'],
+    ['pizza','🍕','pizza'],['carrot','🥕','gulrot'],['ice cream|icecream|ice-cream','🍦','is'],['cake','🎂','kake'],['strawberry','🍓','jordbær'],
+    ['sandwich','🥪','smørbrød'],['chocolate','🍫','sjokolade'],['juice','🧃','juice'],['orange','🍊','appelsin'],['grapes|grape','🍇','druer'],
+    ['pear','🍐','pære'],['tomato','🍅','tomat'],['potato','🥔','potet'],['hot dog|sausage','🌭','pølse'],['burger|hamburger','🍔','hamburger'],
+    ['chips|fries|french fries','🍟','pommes frites'],['rice','🍚','ris'],['cookie|biscuit','🍪','kjeks'],['sweets|candy','🍬','godteri'],['water','💧','vann'],
+    ['pancakes|pancake','🥞','pannekaker'],['lemon','🍋','sitron']]},
+  body:{no:'Kroppen',q:'What is this?',qn:'Hva er dette?',items:[
+    ['eyes|eye','👀','øyne'],['nose','👃','nese'],['mouth|lips','👄','munn'],['ear','👂','øre'],['hand','✋','hånd'],['foot|feet','🦶','fot'],
+    ['leg','🦵','bein'],['arm','💪','arm'],['teeth|tooth','🦷','tenner'],['tongue','👅','tunge'],['finger','☝️','finger'],['thumb','👍','tommel'],['bone','🦴','bein (knokkel)']]},
+  clothes:{no:'Klær',q:'What is this?',qn:'Hva er dette?',items:[
+    ['shoes|shoe','👟','sko'],['socks|sock','🧦','sokker'],['cap','🧢','caps'],['jacket|coat','🧥','jakke'],['dress','👗','kjole'],
+    ['trousers|jeans|pants','👖','bukse'],['T-shirt|t shirt|tshirt|shirt','👕','t-skjorte'],['scarf','🧣','skjerf'],['gloves|glove','🧤','votter'],
+    ['boots|boot','👢','støvler'],['hat','🎩','hatt'],['shorts','🩳','shorts'],['swimsuit','🩱','badedrakt'],['glasses','👓','briller'],
+    ['sunglasses','🕶️','solbriller'],['tie','👔','slips']]},
+  school:{no:'Skolen',q:'What is this?',qn:'Hva er dette?',items:[
+    ['book','📖','bok'],['pencil','✏️','blyant'],['ruler','📏','linjal'],['scissors','✂️','saks'],['bag|school bag|backpack','🎒','sekk'],
+    ['chair','🪑','stol'],['computer|laptop','💻','datamaskin'],['crayons|crayon','🖍️','fargestifter'],['pen','🖊️','penn'],['clock','🕒','klokke'],
+    ['teacher','🧑‍🏫','lærer'],['school','🏫','skole'],['paper','📄','papir'],['notebook','📓','skrivebok'],['bell','🔔','bjelle'],['map','🗺️','kart']]},
+  weather:{no:'Været',q:"What's the weather like?",qn:'Hvordan er været?',items:[
+    ['sunny|sun','☀️','sol'],['rainy|rain|raining','🌧️','regn'],['cloudy|cloud','☁️','overskyet'],['snowy|snow|snowing','❄️','snø'],
+    ['windy|wind','💨','vind'],['rainbow','🌈','regnbue'],['hot','🥵','varmt'],['cold','🥶','kaldt'],['stormy|storm|thunder','⛈️','storm'],['foggy|fog','🌫️','tåke']]},
+  family:{no:'Familie',q:'Who is this?',qn:'Hvem er dette?',items:[
+    ['mum|mom|mummy|mommy|mother','👩','mamma'],['dad|daddy|father','👨','pappa'],['sister','👧','søster'],['brother','👦','bror'],
+    ['baby','👶','baby'],['grandma|granny|grandmother','👵','bestemor'],['grandpa|granddad|grandfather','👴','bestefar'],['family','👪','familie'],['friends|friend','🧑‍🤝‍🧑','venner']]},
+  feelings:{no:'Følelser',q:'How do I feel?',qn:'Hvordan har jeg det?',items:[
+    ['happy','😊','glad'],['sad','😢','lei seg'],['angry','😠','sint'],['tired|sleepy','😴','trøtt'],['scared|afraid','😨','redd'],['surprised','😮','overrasket'],
+    ['sick|ill','🤒','syk'],['excited','🤩','gira'],['shy','😳','sjenert']]},
+  toys:{no:'Leker',q:'What is this?',qn:'Hva er dette?',items:[
+    ['ball|football','⚽','ball'],['teddy|teddy bear','🧸','bamse'],['kite','🪁','drage'],['puzzle','🧩','puslespill'],['balloon','🎈','ballong'],
+    ['game|video game','🎮','spill'],['blocks|bricks|lego','🧱','klosser'],['yo-yo|yoyo','🪀','jojo'],['robot','🤖','robot'],['drum','🥁','tromme'],
+    ['guitar','🎸','gitar'],['skateboard','🛹','skateboard'],['doll','🪆','dukke'],['dice','🎲','terning']]},
+  home:{no:'Hjemme',q:'What is this?',qn:'Hva er dette?',items:[
+    ['house|home','🏠','hus'],['door','🚪','dør'],['window','🪟','vindu'],['bed','🛏️','seng'],['sofa|couch','🛋️','sofa'],['bath|bathtub','🛁','badekar'],
+    ['shower','🚿','dusj'],['toilet','🚽','do'],['key','🔑','nøkkel'],['lamp|light|light bulb','💡','lampe'],['TV|television|tv','📺','TV'],
+    ['phone|mobile','📱','telefon'],['spoon','🥄','skje'],['cup|mug','☕','kopp'],['candle','🕯️','lys']]},
+  transport:{no:'Kjøretøy',q:'What is this?',qn:'Hva er dette?',items:[
+    ['car','🚗','bil'],['bus','🚌','buss'],['train','🚆','tog'],['plane|aeroplane|airplane','✈️','fly'],['boat|ship','⛵','båt'],['bike|bicycle','🚲','sykkel'],
+    ['tractor','🚜','traktor'],['helicopter','🚁','helikopter'],['rocket','🚀','rakett'],['taxi','🚕','taxi'],['police car','🚓','politibil'],
+    ['fire engine|fire truck','🚒','brannbil'],['ambulance','🚑','ambulanse'],['scooter','🛴','sparkesykkel'],['motorbike|motorcycle','🏍️','motorsykkel']]},
+  actions:{no:'Hva gjør jeg?',q:'What am I doing?',qn:'Hva gjør jeg?',items:[
+    ['running|run','🏃','løper'],['swimming|swim','🏊','svømmer'],['dancing|dance','💃','danser'],['sleeping|sleep','🛌','sover'],
+    ['writing|write','✍️','skriver'],['singing|sing','🎤','synger'],['skiing|ski','⛷️','går på ski'],['cycling|riding a bike|ride a bike','🚴','sykler'],
+    ['climbing|climb','🧗','klatrer'],['painting|paint','🎨','maler'],['cooking|cook','🧑‍🍳','lager mat'],['crying|cry','😭','gråter'],
+    ['laughing|laugh','😂','ler'],['drinking|drink','🥤','drikker'],['skating|skate','⛸️','går på skøyter'],['reading|read','📚','leser'],
+    ['eating|eat','🍽️','spiser'],['waving|wave','👋','vinker']]},
+  nature:{no:'Naturen',q:'What is this?',qn:'Hva er dette?',items:[
+    ['tree','🌳','tre'],['flower','🌸','blomst'],['moon','🌙','måne'],['star','⭐','stjerne'],['sea|ocean|wave','🌊','hav'],['mountain','⛰️','fjell'],
+    ['leaf|leaves','🍁','blad'],['mushroom','🍄','sopp'],['fire','🔥','bål'],['snowman','⛄','snømann'],['beach','🏖️','strand'],['island','🏝️','øy'],
+    ['volcano','🌋','vulkan'],['rock|stone','🪨','stein']]},
+  shapes:{no:'Former',q:'What shape is this?',qn:'Hvilken form er dette?',items:[
+    ['circle','⭕','sirkel'],['square','🟥','firkant'],['triangle','🔺','trekant'],['star','⭐','stjerne'],['heart','❤️','hjerte'],['diamond','🔷','rombe']]},
+  days:{no:'Ukedager',q:'Say it in English!',qn:'Hva heter dette på engelsk?',items:[
+    ['Monday','~mandag','mandag'],['Tuesday','~tirsdag','tirsdag'],['Wednesday','~onsdag','onsdag'],['Thursday','~torsdag','torsdag'],
+    ['Friday','~fredag','fredag'],['Saturday','~lørdag','lørdag'],['Sunday','~søndag','søndag']]},
+  months:{no:'Måneder',q:'Say it in English!',qn:'Hva heter dette på engelsk?',items:[
+    ['January','~januar','januar'],['February','~februar','februar'],['March','~mars','mars'],['April','~april','april'],['May','~mai','mai'],
+    ['June','~juni','juni'],['July','~juli','juli'],['August','~august','august'],['September','~september','september'],
+    ['October','~oktober','oktober'],['November','~november','november'],['December','~desember','desember']]},
+  phrases:{no:'Hverdagsord',q:'Say it in English!',qn:'Hva sier du på engelsk?',items:[
+    ['hello|hi','~hei','hei'],['goodbye|bye|bye bye','~ha det','ha det'],['thank you|thanks','~takk','takk'],['please','~vær så snill','vær så snill'],
+    ['sorry','~unnskyld','unnskyld'],['good morning','~god morgen','god morgen'],['good night','~god natt','god natt'],['yes','~ja','ja'],['no','~nei','nei'],
+    ['happy birthday','~gratulerer med dagen','gratulerer med dagen'],['how are you','~hvordan har du det?','hvordan har du det?'],['I am fine|I\'m fine|fine','~jeg har det bra','jeg har det bra']]}
+};
+const TKEYS = Object.keys(T);
+
+// klasseromsbeskjeder: [engelsk, bilde, norsk]
+const CLASS = [
+  ['Sit down, please.','🪑','Sett deg ned'],['Stand up, please.','🧍','Reis deg opp'],['Open your book.','📖','Åpne boka'],
+  ['Close your book.','📕','Lukk boka'],['Put up your hand.','✋','Rekk opp hånda'],['Listen!','👂','Hør etter'],
+  ['Be quiet, please.','🤫','Vær stille'],['Look at the board.','👀','Se på tavla'],['Take out your pencil.','✏️','Ta fram blyanten'],
+  ['Line up at the door.','🚶‍♀️','Still deg i kø ved døra'],['Work in pairs.','👫','Jobb to og to'],['Write your name.','✍️','Skriv navnet ditt'],
+  ['Colour the picture.','🖍️','Fargelegg bildet'],['Tidy up, please.','🧹','Rydd opp'],['Come here, please.','🫴','Kom hit'],
+  ['Put on your jacket.','🧥','Ta på deg jakka'],['Wash your hands.','🧼','Vask hendene'],['Turn the page.','📄','Bla om'],
+  ['Draw a picture.','🎨','Tegn et bilde'],['Eat your lunch.','🥪','Spis matpakka'],['Go outside.','🌳','Gå ut'],['Say it again.','🔁','Si det en gang til'],
+  ['Good morning, class!','🌅','God morgen, klasse!'],["Let's start.",'▶️','Nå begynner vi'],['Look at me.','🧑‍🏫','Se på meg'],
+  ['Repeat after me.','🗣️','Si etter meg'],['Be careful!','⚠️','Vær forsiktig!'],['Hurry up!','⏩','Skynd deg!'],
+  ['Open the window.','🪟','Åpne vinduet'],['Close the door.','🚪','Lukk døra'],['Turn off the light.','💡','Skru av lyset'],
+  ['Put your things away.','📦','Legg bort tingene dine'],['Pack your bag.','🎒','Pakk sekken'],['Find page twelve.','🔢','Finn side tolv'],
+  ['Read the text.','📃','Les teksten'],['Read out loud.','📢','Les høyt'],['Listen and repeat.','🔂','Lytt og si etter'],
+  ['Match the words.','🔗','Sett sammen ordene'],['Circle the right answer.','⭕','Sett ring rundt riktig svar'],['Tick the box.','✅','Sett kryss i ruta'],
+  ['Cut it out.','✂️','Klipp det ut'],['Glue it in your book.','🧴','Lim det inn i boka'],['Fill in the missing words.','📝','Fyll inn ordene som mangler'],
+  ['Work alone.','🧍‍♀️','Jobb alene'],['Work in groups.','👨‍👩‍👧‍👦','Jobb i grupper'],['Talk to your partner.','💬','Snakk med læringsvennen din'],
+  ["Don't talk.",'🤐','Ikke snakk'],["Don't run!",'🚫','Ikke løp!'],['Make a circle.','🔵','Lag en ring'],['Sit on the floor.','🧘','Sett deg på gulvet'],
+  ['Come to the front.','⬆️','Kom fram'],['Go back to your seat.','↩️','Gå tilbake til plassen din'],['Are you ready?','🙋','Er dere klare?'],
+  ['Who knows the answer?','❓','Hvem vet svaret?'],['Any questions?','🤔','Har dere noen spørsmål?'],['Well done!','🌟','Bra jobba!'],
+  ['Try again.','🔄','Prøv igjen'],["It's break time.",'🛝','Det er friminutt'],["It's lunch time.",'🕛','Det er lunsj'],
+  ['Put on your shoes.','👟','Ta på deg skoene'],['Take off your shoes.','🧦','Ta av deg skoene'],['Hang up your jacket.','🪝','Heng opp jakka'],
+  ['Drink some water.','💧','Drikk litt vann'],['You can go to the toilet.','🚽','Du kan gå på do'],['Do your homework.','🏠','Gjør leksene dine'],
+  ['Write the date.','📅','Skriv datoen'],['Count to ten.','🔟','Tell til ti'],['Spell your name.','🔤','Stav navnet ditt'],
+  ['Show me.','👉','Vis meg'],['Point to the picture.','👆','Pek på bildet'],['Stop!','🛑','Stopp!'],['See you tomorrow!','🌇','Vi ses i morgen!'],
+  ['Goodbye, class!','👋','Ha det, klasse!']
+];
+
+// historier: en, no, bilde, spørsmål [q, qn, svar [bilde, tekst], riktig indeks]
+const STORIES = [
+  {pic:'👧',en:"Hello! My name is Emma. I am eight years old. I have a cat. My cat is black.",
+   no:"Hei! Jeg heter Emma. Jeg er åtte år. Jeg har en katt. Katten min er svart.",
+   qs:[["How old is Emma?","Hvor gammel er Emma?",[['7','seven'],['8','eight'],['9','nine']],1],
+       ["What colour is Emma's cat?","Hvilken farge har katten til Emma?",[['⚫','black'],['🟠','orange'],['⚪','white']],0]]},
+  {pic:'👦',en:"Hi! I'm Leo. I like apples and bananas. I don't like fish.",
+   no:"Hei! Jeg er Leo. Jeg liker epler og bananer. Jeg liker ikke fisk.",
+   qs:[["What does Leo like?","Hva liker Leo?",[['🍎🍌','apples and bananas'],['🐟','fish'],['🍕','pizza']],0],
+       ["What does Leo not like?","Hva liker Leo ikke?",[['🍎','apples'],['🍌','bananas'],['🐟','fish']],2]]},
+  {pic:'⛄',en:"It is cold and snowy today. Sam puts on his hat and his gloves. Then he goes out to play in the snow.",
+   no:"Det er kaldt og snør i dag. Sam tar på seg lua og vottene. Så går han ut for å leke i snøen.",
+   qs:[["What is the weather like?","Hvordan er været?",[['☀️','sunny'],['❄️','snowy'],['🌧️','rainy']],1],
+       ["What does Sam put on?","Hva tar Sam på seg?",[['🧢🧤','hat and gloves'],['👗','a dress'],['🩳','shorts']],0]]},
+  {pic:'🧑‍🏫',en:"Good morning, class! Please sit down and open your books at page ten.",
+   no:"God morgen, klasse! Sett dere ned og åpne bøkene på side ti.",
+   qs:[["What must you open?","Hva skal du åpne?",[['📖','your book'],['🎒','your bag'],['🚪','the door']],0],
+       ["What page?","Hvilken side?",[['2','two'],['10','ten'],['12','twelve']],1]]},
+  {pic:'🏠',en:"This is my family. I have a mum, a dad and a little brother. My brother is a baby. He is very funny!",
+   no:"Dette er familien min. Jeg har en mamma, en pappa og en lillebror. Broren min er en baby. Han er veldig morsom!",
+   qs:[["Who is the baby?","Hvem er babyen?",[['👦','my brother'],['👩','my mum'],['👨','my dad']],0],
+       ["Is the baby funny or sad?","Er babyen morsom eller lei seg?",[['😄','funny'],['😢','sad'],['😠','angry']],0]]},
+  {pic:'🐾',en:"Look at the animals! The dog is big. The mouse is small. The bird can fly.",
+   no:"Se på dyrene! Hunden er stor. Musa er liten. Fuglen kan fly.",
+   qs:[["Which animal can fly?","Hvilket dyr kan fly?",[['🐶','the dog'],['🐭','the mouse'],['🐦','the bird']],2],
+       ["Which animal is small?","Hvilket dyr er lite?",[['🐭','the mouse'],['🐶','the dog'],['🐘','the elephant']],0]]},
+  {pic:'🎉',en:"Today is Mia's birthday. She is nine years old. She gets a big cake and a red ball.",
+   no:"I dag har Mia bursdag. Hun er ni år. Hun får en stor kake og en rød ball.",
+   qs:[["How old is Mia today?","Hvor gammel er Mia i dag?",[['8','eight'],['9','nine'],['10','ten']],1],
+       ["What colour is the ball?","Hvilken farge har ballen?",[['🔵','blue'],['🟢','green'],['🔴','red']],2]]},
+  {pic:'😢',en:"Tom is sad. He can't find his pencil. Look! The pencil is under the chair. Now Tom is happy.",
+   no:"Tom er lei seg. Han finner ikke blyanten sin. Se! Blyanten ligger under stolen. Nå er Tom glad.",
+   qs:[["What can't Tom find?","Hva finner ikke Tom?",[['✏️','his pencil'],['📖','his book'],['🎒','his bag']],0],
+       ["Where is the pencil?","Hvor er blyanten?",[['🪑','under the chair'],['🎒','in the bag'],['📖','in the book']],0]]},
+  {pic:'👋',en:"Hello! What's your name? My name is Nora. How are you, Nora? I'm fine, thank you!",
+   no:"Hallo! Hva heter du? Jeg heter Nora. Hvordan har du det, Nora? Jeg har det bra, takk!",
+   qs:[["What is her name?","Hva heter hun?",[['','Emma'],['','Nora'],['','Mia']],1],
+       ["How is Nora?","Hvordan har Nora det?",[['😊','fine'],['😢','sad'],['😴','tired']],0]]},
+  {pic:'📅',en:"On Monday I go swimming. On Tuesday I play football. On Wednesday I read a book.",
+   no:"På mandag svømmer jeg. På tirsdag spiller jeg fotball. På onsdag leser jeg en bok.",
+   qs:[["What do I do on Tuesday?","Hva gjør jeg på tirsdag?",[['🏊','swimming'],['⚽','football'],['📖','reading']],1],
+       ["When do I go swimming?","Når svømmer jeg?",[['','Monday'],['','Tuesday'],['','Wednesday']],0]]},
+  {pic:'❤️',en:"My favourite animal is the elephant. It is big and grey. It has big ears and a long nose.",
+   no:"Favorittdyret mitt er elefanten. Den er stor og grå. Den har store ører og en lang snabel.",
+   qs:[["What is my favourite animal?","Hva er favorittdyret mitt?",[['🦁','the lion'],['🐘','the elephant'],['🐵','the monkey']],1],
+       ["What colour is it?","Hvilken farge har det?",[['#9A9AA6','grey'],['🟤','brown'],['🟢','green']],0]]},
+  {pic:'🕛',en:"It is lunch time. Ali has a sandwich, an apple and a glass of milk. Yum!",
+   no:"Det er lunsj. Ali har et smørbrød, et eple og et glass melk. Nam!",
+   qs:[["What does Ali drink?","Hva drikker Ali?",[['🧃','juice'],['🥛','milk'],['💧','water']],1],
+       ["What fruit does Ali have?","Hvilken frukt har Ali?",[['🍌','a banana'],['🍎','an apple'],['🍓','strawberries']],1]]},
+  {pic:'🐶',en:"This is my dog. His name is Rex. He is brown and he likes to run in the park.",
+   no:"Dette er hunden min. Han heter Rex. Han er brun og liker å løpe i parken.",
+   qs:[["What is the dog's name?","Hva heter hunden?",[['','Max'],['','Rex'],['','Leo']],1],
+       ["What colour is Rex?","Hvilken farge har Rex?",[['⚫','black'],['🟤','brown'],['⚪','white']],1]]},
+  {pic:'🏖️',en:"It is summer. It is hot and sunny. Lisa and her dad go to the beach. They swim in the sea.",
+   no:"Det er sommer. Det er varmt og sol. Lisa og pappaen hennes drar til stranda. De bader i havet.",
+   qs:[["Who goes to the beach with Lisa?","Hvem drar til stranda med Lisa?",[['👨','her dad'],['👩','her mum'],['👵','her grandma']],0],
+       ["What do they do in the sea?","Hva gjør de i havet?",[['🏊','swim'],['⚽','play football'],['📖','read']],0]]},
+  {pic:'🛒',en:"Mum and I go to the shop. We buy milk, bread and three apples.",
+   no:"Mamma og jeg går i butikken. Vi kjøper melk, brød og tre epler.",
+   qs:[["How many apples?","Hvor mange epler?",[['2','two'],['3','three'],['5','five']],1],
+       ["What do they buy?","Hva kjøper de?",[['🥛🍞','milk and bread'],['🍕','pizza'],['🍫','chocolate']],0]]},
+  {pic:'🎒',en:"In my school bag I have two books, a red pencil case and my lunch box.",
+   no:"I skolesekken min har jeg to bøker, et rødt pennal og matboksen min.",
+   qs:[["How many books?","Hvor mange bøker?",[['1','one'],['2','two'],['4','four']],1],
+       ["What colour is the pencil case?","Hvilken farge har pennalet?",[['🔴','red'],['🔵','blue'],['🟡','yellow']],0]]},
+  {pic:'🦁',en:"We are at the zoo. I can see a lion, two giraffes and a monkey. The monkey is eating a banana.",
+   no:"Vi er i dyrehagen. Jeg ser en løve, to sjiraffer og en ape. Apen spiser en banan.",
+   qs:[["What is the monkey eating?","Hva spiser apen?",[['🍎','an apple'],['🍌','a banana'],['🥕','a carrot']],1],
+       ["How many giraffes?","Hvor mange sjiraffer?",[['2','two'],['3','three'],['1','one']],0]]},
+  {pic:'🌧️',en:"It is raining. Ben can't play outside. He plays with his toy cars in his room.",
+   no:"Det regner. Ben kan ikke leke ute. Han leker med lekebilene sine på rommet.",
+   qs:[["What is the weather like?","Hvordan er været?",[['🌧️','rainy'],['☀️','sunny'],['❄️','snowy']],0],
+       ["What does Ben play with?","Hva leker Ben med?",[['🚗','toy cars'],['🧸','a teddy bear'],['🪁','a kite']],0]]},
+  {pic:'⏰',en:"I get up at seven o'clock. I eat breakfast and brush my teeth. Then I go to school.",
+   no:"Jeg står opp klokka sju. Jeg spiser frokost og pusser tennene. Så går jeg på skolen.",
+   qs:[["When do I get up?","Når står jeg opp?",[['7',"seven o'clock"],['8',"eight o'clock"],['6',"six o'clock"]],0],
+       ["What do I brush?","Hva pusser jeg?",[['🦷','my teeth'],['👟','my shoes'],['🐶','my dog']],0]]},
+  {pic:'🐱',en:"Where is the cat? Is it on the bed? No! Is it under the chair? Yes! The cat is under the chair.",
+   no:"Hvor er katten? Er den på senga? Nei! Er den under stolen? Ja! Katten er under stolen.",
+   qs:[["Where is the cat?","Hvor er katten?",[['🛏️','on the bed'],['🪑','under the chair'],['🎒','in the bag']],1],
+       ["Is the cat on the bed?","Er katten på senga?",[['✅','yes'],['❌','no'],['🤷',"I don't know"]],1]]},
+  {pic:'🧑‍🍳',en:"Dad is making pancakes. He needs eggs, milk and flour. Yummy! I love pancakes.",
+   no:"Pappa lager pannekaker. Han trenger egg, melk og mel. Nam! Jeg elsker pannekaker.",
+   qs:[["What is Dad making?","Hva lager pappa?",[['🥞','pancakes'],['🍕','pizza'],['🎂','a cake']],0],
+       ["What does he need?","Hva trenger han?",[['🥚🥛','eggs and milk'],['🍎🍌','apples and bananas'],['🧀','cheese']],0]]},
+  {pic:'⚽',en:"Oscar plays football on Saturday. His team is green. He scores a goal! Oscar is very happy.",
+   no:"Oscar spiller fotball på lørdag. Laget hans er grønt. Han scorer et mål! Oscar er veldig glad.",
+   qs:[["When does Oscar play football?","Når spiller Oscar fotball?",[['','Saturday'],['','Sunday'],['','Monday']],0],
+       ["What colour is his team?","Hvilken farge har laget hans?",[['🟢','green'],['🔴','red'],['🔵','blue']],0]]},
+  {pic:'🎨',en:"Draw a big house. Colour the door red. Colour the sun yellow. Now draw a tree next to the house.",
+   no:"Tegn et stort hus. Fargelegg døra rød. Fargelegg sola gul. Tegn så et tre ved siden av huset.",
+   qs:[["What colour is the door?","Hvilken farge skal døra ha?",[['🔴','red'],['🟡','yellow'],['🟢','green']],0],
+       ["What do you draw next to the house?","Hva tegner du ved siden av huset?",[['🌳','a tree'],['🚗','a car'],['🐶','a dog']],0]]},
+  {pic:'🎂',en:"My birthday is in May. I want a bike for my birthday. A blue bike!",
+   no:"Bursdagen min er i mai. Jeg ønsker meg en sykkel til bursdagen. En blå sykkel!",
+   qs:[["When is my birthday?","Når har jeg bursdag?",[['','May'],['','March'],['','June']],0],
+       ["What do I want?","Hva ønsker jeg meg?",[['🚲','a bike'],['🧸','a teddy bear'],['🎮','a game']],0]]},
+  {pic:'🐸',en:"A little green frog sits on a leaf. It is hungry. A fly comes by. Yum! The frog eats the fly.",
+   no:"En liten grønn frosk sitter på et blad. Den er sulten. En flue kommer forbi. Nam! Frosken spiser flua.",
+   qs:[["What colour is the frog?","Hvilken farge har frosken?",[['🟢','green'],['🟤','brown'],['🟡','yellow']],0],
+       ["What does the frog eat?","Hva spiser frosken?",[['🪰','a fly'],['🍎','an apple'],['🐟','a fish']],0]]},
+  {pic:'❄️',en:"In winter it is cold. We go skiing in the mountains. Then we drink hot chocolate.",
+   no:"Om vinteren er det kaldt. Vi går på ski på fjellet. Etterpå drikker vi kakao.",
+   qs:[["What do we do in the mountains?","Hva gjør vi på fjellet?",[['⛷️','go skiing'],['🏊','swim'],['🚲','ride a bike']],0],
+       ["What do we drink?","Hva drikker vi?",[['☕','hot chocolate'],['🥛','milk'],['🧃','juice']],0]]},
+  {pic:'👵',en:"On Sunday we visit Grandma. She has a big garden with red flowers. She makes a cake for us.",
+   no:"På søndag besøker vi bestemor. Hun har en stor hage med røde blomster. Hun baker en kake til oss.",
+   qs:[["Who do we visit?","Hvem besøker vi?",[['👵','Grandma'],['👨','Dad'],['🧑‍🏫','the teacher']],0],
+       ["What colour are the flowers?","Hvilken farge har blomstene?",[['🔴','red'],['🟣','purple'],['🟡','yellow']],0]]},
+  {pic:'🚌',en:"I go to school by bus. The bus is yellow. My friend Ella sits next to me.",
+   no:"Jeg tar bussen til skolen. Bussen er gul. Venninnen min Ella sitter ved siden av meg.",
+   qs:[["How do I go to school?","Hvordan kommer jeg meg til skolen?",[['🚌','by bus'],['🚗','by car'],['🚲','by bike']],0],
+       ["Who sits next to me?","Hvem sitter ved siden av meg?",[['','Ella'],['','Emma'],['','Nora']],0]]},
+  {pic:'🐻',en:"Teddy is a small bear. He has a red hat and blue shoes. He likes honey.",
+   no:"Teddy er en liten bjørn. Han har en rød hatt og blå sko. Han liker honning.",
+   qs:[["What does Teddy like?","Hva liker Teddy?",[['🍯','honey'],['🐟','fish'],['🍕','pizza']],0],
+       ["What colour is his hat?","Hvilken farge har hatten hans?",[['🔴','red'],['🔵','blue'],['🟢','green']],0]]},
+  {pic:'🙋',en:"Can I have a pencil, please? Yes, here you are. Thank you!",
+   no:"Kan jeg få en blyant? Ja, vær så god. Takk!",
+   qs:[["What does the child want?","Hva vil barnet ha?",[['✏️','a pencil'],['📖','a book'],['✂️','scissors']],0],
+       ["What does the child say at the end?","Hva sier barnet til slutt?",[['🙏','thank you'],['👋','goodbye'],['😢','sorry']],0]]},
+  {pic:'🤒',en:"Anna is not at school today. She is sick. She stays in bed and sleeps.",
+   no:"Anna er ikke på skolen i dag. Hun er syk. Hun ligger i senga og sover.",
+   qs:[["Where is Anna?","Hvor er Anna?",[['🛏️','in bed'],['🏫','at school'],['🏖️','at the beach']],0],
+       ["Why?","Hvorfor?",[['🤒','she is sick'],['😊','she is happy'],['🎂','it is her birthday']],0]]},
+  {pic:'🍕',en:"On Friday we eat pizza. I like pizza with cheese and ham. My sister likes pizza with pineapple.",
+   no:"På fredag spiser vi pizza. Jeg liker pizza med ost og skinke. Søsteren min liker pizza med ananas.",
+   qs:[["When do we eat pizza?","Når spiser vi pizza?",[['','Friday'],['','Monday'],['','Sunday']],0],
+       ["What does my sister like on her pizza?","Hva liker søsteren min på pizzaen?",[['🍍','pineapple'],['🧀','cheese'],['🍄','mushrooms']],0]]},
+  {pic:'🐰',en:"I have two pets. A rabbit and a fish. The rabbit is white. The fish is orange.",
+   no:"Jeg har to kjæledyr. En kanin og en fisk. Kaninen er hvit. Fisken er oransje.",
+   qs:[["How many pets?","Hvor mange kjæledyr?",[['2','two'],['3','three'],['1','one']],0],
+       ["What colour is the fish?","Hvilken farge har fisken?",[['🟠','orange'],['⚪','white'],['🔵','blue']],0]]},
+  {pic:'🎃',en:"It's Halloween! I am a ghost and my brother is a pumpkin. We get lots of sweets.",
+   no:"Det er Halloween! Jeg er et spøkelse og broren min er et gresskar. Vi får masse godteri.",
+   qs:[["What is my brother?","Hva er broren min?",[['🎃','a pumpkin'],['👻','a ghost'],['🧛','a vampire']],0],
+       ["What do we get?","Hva får vi?",[['🍬','sweets'],['🍎','apples'],['🧸','toys']],0]]},
+  {pic:'🎄',en:"It is Christmas. There is a big tree in the living room. Under the tree there are five presents.",
+   no:"Det er jul. Det står et stort tre i stua. Under treet ligger det fem gaver.",
+   qs:[["Where is the tree?","Hvor står treet?",[['🛋️','in the living room'],['🛁','in the bathroom'],['🌳','in the garden']],0],
+       ["How many presents?","Hvor mange gaver?",[['5','five'],['4','four'],['9','nine']],0]]},
+  {pic:'😴',en:"It is eight o'clock in the evening. I put on my pyjamas and read a book. Good night!",
+   no:"Klokka er åtte om kvelden. Jeg tar på meg pyjamasen og leser en bok. God natt!",
+   qs:[["What time is it?","Hva er klokka?",[['8',"eight o'clock"],['7',"seven o'clock"],['9',"nine o'clock"]],0],
+       ["What do I read?","Hva leser jeg?",[['📖','a book'],['✉️','a letter'],['🗺️','a map']],0]]}
+];
+
+const SQ = [
+  {n:'Peachy Pip',s:'bun',c:'#FFB38A',a:'leaf',r:0,cw:['orange','oransje']},
+  {n:'Bubble Bob',s:'blob',c:'#8FD3FF',a:'',r:0,cw:['blue','blå']},
+  {n:'Kitty Kim',s:'cat',c:'#FFC4DD',a:'bow',r:0,cw:['pink','rosa']},
+  {n:'Teddy Ted',s:'bear',c:'#D2A47C',a:'',r:0,cw:['brown','brun']},
+  {n:'Cloudy Clara',s:'cloud',c:'#E4EAFF',a:'',r:0,cw:['white','hvit']},
+  {n:'Toasty Tom',s:'toast',c:'#F2C77A',a:'',r:0,cw:['yellow','gul']},
+  {n:'Droppy Dot',s:'drop',c:'#7FE0C3',a:'',r:0,cw:['green','grønn']},
+  {n:'Lovely Lily',s:'heart',c:'#FF8FAE',a:'',r:0,cw:['pink','rosa']},
+  {n:'Minty Max',s:'cat',c:'#A6EBC9',a:'',r:0,cw:['green','grønn']},
+  {n:'Berry Bella',s:'bear',c:'#C3AEFF',a:'bow',r:0,cw:['purple','lilla']},
+  {n:'Lemon Leo',s:'drop',c:'#FFE36B',a:'leaf',r:0,cw:['yellow','gul']},
+  {n:'Plum Polly',s:'blob',c:'#A88BFF',a:'spots',r:0,cw:['purple','lilla']},
+  {n:'Strawberry Sam',s:'drop',c:'#FF7A7A',a:'seeds',r:0,cw:['red','rød']},
+  {n:'Kiwi Kate',s:'blob',c:'#A9D86E',a:'sprinkles',r:0,cw:['green','grønn']},
+  {n:'Milky Mo',s:'bun',c:'#FAFAFA',a:'cow',r:0,cw:['white','hvit']},
+  {n:'Candy Coco',s:'cloud',c:'#FFC9EC',a:'',r:0,cw:['pink','rosa']},
+  {n:'Avocado Andy',s:'drop',c:'#8CC665',a:'leaf',r:1,cw:['green','grønn']},
+  {n:'Pancake Pete',s:'bun',c:'#F7D08A',a:'sprinkles',r:1,cw:['yellow','gul']},
+  {n:'Blueberry Ben',s:'blob',c:'#6F8BEA',a:'leaf',r:1,cw:['blue','blå']},
+  {n:'Panda Paul',s:'bear',c:'#FAFAFA',a:'panda',r:1,cw:['black and white','svart og hvit']},
+  {n:'Unicorn Una',s:'blob',c:'#F3E2FF',a:'horn',r:1,cw:['purple','lilla']},
+  {n:'Rainbow Ruby',s:'cloud',c:'#FFF1A8',a:'sprinkles',r:2,cw:['yellow','gul']},
+  {n:'Golden Gus',s:'cat',c:'#FFD24A',a:'',r:2,cw:['gold','gull']},
+  {n:'Starry Stella',s:'heart',c:'#BDEFFF',a:'bow',r:2,cw:['blue','blå']}
+];
+const RAR = ['Vanlig','Sjelden','Glitter'];
+const GIFT = 8, ROUND = 6;
+const PRAISE = ['Great!','Well done!','Super!','Good job!','Fantastic!','Yes, that is right!','Brilliant!'];
+
+// ---------- state ----------
+const KEY = 'englishsquish.v1';
+const S = {stars:0,toNext:0,gifts:1,have:[],topic:'all',sound:true,voice:'',rate:.85,seen:{},miss:{}};
+try{ Object.assign(S, JSON.parse(localStorage.getItem(KEY)||'{}')); }catch(e){}
+if(!S.seen||typeof S.seen!=='object') S.seen={}; if(!S.miss||typeof S.miss!=='object') S.miss={};
+if(S.topic!=='all' && !T[S.topic]) S.topic='all';
+function save(){ try{ localStorage.setItem(KEY, JSON.stringify(S)); }catch(e){} }
+let G = null, view = 'home', confirmReset = false, giftTaps = 0, lastSq = null;
+const app = document.getElementById('app');
+
+// ---------- helpers ----------
+const shuffle = a => { a=[...a]; for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]];} return a; };
+const pick = a => a[Math.random()*a.length|0];
+const esc = s => String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const word = it => it[0].split('|')[0];
+function picHTML(p){
+  if(!p) return '';
+  if(p[0]==='#') return `<span class="sw" style="background:${p}"></span>`;
+  if(p[0]==='~') return `<span class="nw">${esc(p.slice(1))}</span>`;
+  if(/^\d+$/.test(p)) return `<span class="num">${p}</span>`;
+  return p;
+}
+const ICON = {
+  star:'<svg viewBox="0 0 24 24"><path style="fill:var(--star)" d="M12 2.5l2.9 6.2 6.8.7-5.1 4.6 1.5 6.7L12 17.3l-6.1 3.4 1.5-6.7L2.3 9.4l6.8-.7z"/></svg>',
+  starOff:'<svg viewBox="0 0 24 24"><path style="fill:var(--line)" d="M12 2.5l2.9 6.2 6.8.7-5.1 4.6 1.5 6.7L12 17.3l-6.1 3.4 1.5-6.7L2.3 9.4l6.8-.7z"/></svg>',
+  speak:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path fill="currentColor" d="M4 9.5v5h3.5l4.5 4v-13l-4.5 4z"/><path d="M15.5 9a4 4 0 0 1 0 6M18.2 6.3a8 8 0 0 1 0 11.4"/></svg>',
+  mute:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path fill="currentColor" d="M4 9.5v5h3.5l4.5 4v-13l-4.5 4z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/></svg>',
+  home:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 11L12 4l8.5 7"/><path d="M6 9.5V20h12V9.5"/></svg>',
+  mic:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/></svg>',
+  gift:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><rect x="3.5" y="9" width="17" height="11.5" rx="2" fill="rgba(255,255,255,.25)"/><path d="M2.5 9h19M12 9v11.5"/><path d="M12 9C9 3 5.5 5 8 8M12 9c3-6 6.5-4 4-1"/></svg>'
+};
+
+// ---------- lyd ----------
+let AC = null;
+function tone(f,d,type='sine',when=0,vol=.18,f2){
+  if(!S.sound) return;
+  try{
+    AC = AC || new (window.AudioContext||window.webkitAudioContext)();
+    const t = AC.currentTime+when, o = AC.createOscillator(), g = AC.createGain();
+    o.type=type; o.frequency.setValueAtTime(f,t); if(f2) o.frequency.exponentialRampToValueAtTime(f2,t+d);
+    g.gain.setValueAtTime(vol,t); g.gain.exponentialRampToValueAtTime(.001,t+d);
+    o.connect(g).connect(AC.destination); o.start(t); o.stop(t+d);
+  }catch(e){}
+}
+const sfx = {
+  ok(){ tone(523,.15,'triangle',0); tone(659,.15,'triangle',.1); tone(784,.25,'triangle',.2); },
+  no(){ tone(240,.22,'sine',0,.15,170); },
+  tap(){ tone(700,.06,'triangle',0,.1); },
+  squish(){ tone(420,.35,'sine',0,.25,120); },
+  open(){ [523,659,784,1047].forEach((f,i)=>tone(f,.3,'triangle',i*.09)); }
+};
+
+// ---------- engelsk stemme ----------
+const HAS_TTS = typeof window.speechSynthesis!=='undefined' && typeof window.SpeechSynthesisUtterance!=='undefined';
+let VOICE = null, ttsOK = null, keep = [];
+function rankVoice(v){
+  let s; const n = v.name+' '+v.voiceURI;
+  if(/^en[-_]GB/i.test(v.lang)) s=100; else if(/^en[-_]US/i.test(v.lang)) s=85; else if(/^en/i.test(v.lang)) s=70; else return -1;
+  if(/natural|neural/i.test(n)) s+=60; if(/premium/i.test(n)) s+=50; if(/enhanced|forbedret/i.test(n)) s+=45;
+  if(/online/i.test(n)) s+=30; if(/google/i.test(n)) s+=25; if(/compact|espeak/i.test(n)) s-=40;
+  if(/bad news|bells|boing|bubbles|cellos|wobble|whisper|zarvox|trinoids|organ|jester|superstar|albert|bahh|hysterical|deranged|good news/i.test(n)) s-=200;
+  return s;
+}
+function voiceList(){ try{ return speechSynthesis.getVoices().map(v=>[rankVoice(v),v]).filter(x=>x[0]>=0).sort((a,b)=>b[0]-a[0]).map(x=>x[1]); }catch(e){ return []; } }
+function pickVoice(){ const L=voiceList(); VOICE = L.find(v=>v.voiceURI===S.voice) || L[0] || null; fillVoiceSelect(); }
+function quality(v){ const n=v.name+' '+v.voiceURI; return /natural|neural|premium|enhanced|forbedret/i.test(n)?' ★ god kvalitet':/online|google/i.test(n)?' ★':''; }
+function fillVoiceSelect(){
+  const sel=document.getElementById('voicesel'); if(!sel) return;
+  const L=voiceList();
+  sel.innerHTML = L.length ? L.map(v=>`<option value="${esc(v.voiceURI)}"${VOICE&&v.voiceURI===VOICE.voiceURI?' selected':''}>${esc(v.name)} (${esc(v.lang)})${quality(v)}</option>`).join('')
+                           : '<option>Ingen engelsk stemme funnet</option>';
+  sel.disabled = !L.length;
+}
+if(HAS_TTS){ try{ pickVoice(); speechSynthesis.addEventListener('voiceschanged', pickVoice); }catch(e){} }
+function speakNow(t, queue, vol, rate){
+  if(!HAS_TTS) { ttsOK=false; return; }
+  try{
+    if(!queue && (speechSynthesis.speaking||speechSynthesis.pending)) speechSynthesis.cancel();
+    speechSynthesis.resume();
+    const u = new SpeechSynthesisUtterance(t);
+    u.lang = VOICE ? VOICE.lang : 'en-GB'; if(VOICE) u.voice = VOICE;
+    u.rate = rate || S.rate || .85; u.pitch = 1; u.volume = vol!=null ? vol : 1;
+    keep.push(u); if(keep.length>8) keep.shift();
+    if(vol==null){
+      let started=false; u.onstart=()=>{ started=true; if(ttsOK!==true){ ttsOK=true; updateVoiceNote(); } };
+      setTimeout(()=>{ if(!started && ttsOK!==true){ ttsOK=false; updateVoiceNote(); } }, 2500);
+    }
+    speechSynthesis.speak(u);
+  }catch(e){ ttsOK=false; updateVoiceNote(); }
+}
+function say(t, queue, slow){ if(S.sound) speakNow(t, queue, null, slow ? .6 : null); }
+let unlocked=false;
+document.addEventListener('pointerdown', ()=>{ if(unlocked||!HAS_TTS) return; unlocked=true; speakNow('.', true, 0); }, {capture:true});
+function voiceStatus(){
+  if(!HAS_TTS) return 'Denne appen eller nettleseren har ingen opplesing.';
+  if(ttsOK===false) return 'Opplesingen kom ikke i gang her.';
+  if(ttsOK===true) return VOICE ? `Stemmen virker (${VOICE.name}).` : 'Stemmen virker.';
+  return VOICE ? `Fant engelsk stemme: ${VOICE.name}.` : 'Fant ingen engelsk stemme ennå.';
+}
+function updateVoiceNote(){
+  const n=document.getElementById('voicenote'); if(n) n.textContent=voiceStatus();
+  const b=document.getElementById('nospeech'); if(b) b.hidden = !(S.sound && (ttsOK===false));
+}
+
+// ---------- mikrofon (talegjenkjenning) ----------
+const SRC = window.SpeechRecognition || window.webkitSpeechRecognition;
+let micBlocked = !SRC, listening = false, REC = null;
+function listen(onText, onFail){
+  if(!SRC){ micBlocked=true; onFail('none'); return; }
+  try{ speechSynthesis.cancel(); }catch(e){}
+  let done=false; const fin = (f,x)=>{ if(done) return; done=true; listening=false; f(x); };
+  try{
+    const r = new SRC();
+    r.lang = VOICE && /^en/i.test(VOICE.lang) ? VOICE.lang : 'en-GB';
+    r.interimResults=false; r.maxAlternatives=5; r.continuous=false;
+    r.onresult = e=>{ const alts=[]; for(const res of e.results) for(let i=0;i<res.length;i++) alts.push(res[i].transcript); fin(onText, alts); };
+    r.onerror = e=>fin(onFail, e.error||'error');
+    r.onend = ()=>fin(onFail, 'no-speech');
+    REC=r; listening=true; r.start();
+  }catch(e){ fin(onFail, 'not-allowed'); }
+}
+function stopListen(){ try{ REC && REC.abort(); }catch(e){} listening=false; }
+const BLOCK_ERR = ['not-allowed','service-not-allowed','audio-capture','none','network','language-not-supported','error'];
+const norm = s => ' '+s.toLowerCase().replace(/[^a-z0-9' ]+/g,' ').replace(/\s+/g,' ').trim()+' ';
+function lev(a,b){ const m=a.length,n=b.length; if(Math.abs(m-n)>1) return 2; let p=[...Array(n+1).keys()];
+  for(let i=1;i<=m;i++){ const c=[i]; for(let j=1;j<=n;j++) c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1)); p=c; } return p[n]; }
+function heardIt(alts, it){
+  const targets = it[0].split('|').map(t=>norm(t).trim());
+  if(/^\d+$/.test(it[1])) targets.push(it[1]);
+  return alts.some(a=>{ const A=norm(a);
+    return targets.some(t=> A.includes(' '+t+' ') || (!t.includes(' ') && t.length>=4 && A.trim().split(' ').some(w=>lev(w,t)<=1)));
+  });
+}
+
+// ---------- squishy-kunst ----------
+function shade(hex,f){ const n=parseInt(hex.slice(1),16); const c=[n>>16,(n>>8)&255,n&255].map(v=>Math.round(v*f)); return `rgb(${c})`; }
+const SHAPES = {
+  blob:['<ellipse cx="60" cy="68" rx="44" ry="38"/>',68,30],
+  bun:['<path d="M14 80Q14 40 60 38Q106 40 106 80Q106 102 60 102Q14 102 14 80Z"/>',74,38],
+  drop:['<path d="M60 12C78 36 100 54 100 78C100 98 82 106 60 106C38 106 20 98 20 78C20 54 42 36 60 12Z"/>',78,12],
+  heart:['<path d="M60 104C22 80 10 62 16 44C22 26 48 22 60 40C72 22 98 26 104 44C110 62 98 80 60 104Z"/>',60,40],
+  cat:['<path d="M26 48L22 14L50 32Z"/><path d="M94 48L98 14L70 32Z"/><ellipse cx="60" cy="68" rx="44" ry="38"/>',68,30],
+  bear:['<circle cx="28" cy="38" r="14"/><circle cx="92" cy="38" r="14"/><ellipse cx="60" cy="68" rx="44" ry="38"/>',68,30],
+  cloud:['<circle cx="36" cy="74" r="24"/><circle cx="60" cy="56" r="28"/><circle cx="85" cy="72" r="24"/><rect x="28" y="66" width="64" height="32" rx="16"/>',74,28],
+  toast:['<path d="M24 56C10 50 12 24 36 24C46 14 74 14 84 24C108 24 110 50 96 56L96 98Q96 104 90 104L30 104Q24 104 24 98Z"/>',70,16]
+};
+function sparkle(x,y,s,c){ return `<path style="fill:${c}" d="M${x} ${y-s}Q${x+s*.18} ${y-s*.18} ${x+s} ${y}Q${x+s*.18} ${y+s*.18} ${x} ${y+s}Q${x-s*.18} ${y+s*.18} ${x-s} ${y}Q${x-s*.18} ${y-s*.18} ${x} ${y-s}Z"/>`; }
+function sqSVG(d, locked){
+  const [shape, fy, top] = SHAPES[d.s];
+  if(locked){
+    return `<svg viewBox="0 -12 120 128" aria-hidden="true"><g style="fill:var(--locked);stroke:var(--line)" stroke-width="5" stroke-linejoin="round">${shape}</g><g style="fill:var(--locked)">${shape}</g>
+      <text x="60" y="${fy+12}" text-anchor="middle" style="fill:var(--muted);font:700 38px var(--display)">?</text></svg>`;
+  }
+  const c = d.c, out = shade(c,.78), ink = '#2E2A3F';
+  let acc = '', under = '', eye = ink, er = 4.6;
+  const a = d.a;
+  if(a==='leaf') acc += `<path style="fill:#4FB548;stroke:#2F8A33" stroke-width="2" d="M60 ${top+3}C57 ${top-8} 62 ${top-15} 73 ${top-17}C74 ${top-7} 69 ${top-1} 60 ${top+3}Z"/>`;
+  if(a==='bow') acc += `<g style="fill:#FF5C8A;stroke:#C93A66" stroke-width="2" stroke-linejoin="round"><path d="M84 ${top+6}L70 ${top-4}L72 ${top+16}Z"/><path d="M84 ${top+6}L98 ${top-4}L96 ${top+16}Z"/><circle cx="84" cy="${top+6}" r="4.5"/></g>`;
+  if(a==='horn') acc += `<path style="fill:#FFD54A;stroke:#D9A800" stroke-width="2" stroke-linejoin="round" d="M53 ${top+5}L60 ${top-24}L67 ${top+5}Z"/><path d="M56 ${top-6}L64 ${top-9}M55 ${top+1}L65 ${top-2}" style="stroke:#D9A800" stroke-width="2"/>`;
+  if(a==='spots') acc += [[38,fy+22,7],[84,fy+18,5],[70,fy+30,4]].map(([x,y,r])=>`<circle cx="${x}" cy="${y}" r="${r}" style="fill:${shade(c,.82)}"/>`).join('');
+  if(a==='cow') acc += `<path style="fill:${ink}" d="M24 70q8-14 18-6t-4 16q-12 2-14-10z"/><path style="fill:${ink}" d="M80 86q10-8 18 0t-6 12q-12 0-12-12z"/><ellipse cx="62" cy="48" rx="7" ry="5" style="fill:${ink}"/>`;
+  if(a==='seeds') acc += [[44,58],[76,58],[36,88],[84,88],[60,96],[50,46],[70,46]].map(([x,y])=>`<ellipse cx="${x}" cy="${y}" rx="1.8" ry="3" style="fill:#FFF3B0"/>`).join('') + `<path style="fill:#4FB548;stroke:#2F8A33" stroke-width="2" stroke-linejoin="round" d="M60 18L48 6L58 10L60 0L62 10L72 6Z"/>`;
+  if(a==='sprinkles'){ const col=['#FF5C8A','#3D7BFF','#FFC83D','#1FBF8F','#A06BFF'];
+    acc += [[36,52,30],[48,44,-20],[66,42,60],[80,50,10],[90,62,-40],[30,66,70],[58,50,-60],[74,58,35]].map(([x,y,r],i)=>`<rect x="${x-4}" y="${y-1.6}" width="8" height="3.2" rx="1.6" transform="rotate(${r} ${x} ${y})" style="fill:${col[i%5]}"/>`).join(''); }
+  if(a==='panda'){ under += `<circle cx="28" cy="38" r="14" style="fill:${ink}"/><circle cx="92" cy="38" r="14" style="fill:${ink}"/>`;
+    acc += `<ellipse cx="46" cy="${fy}" rx="9" ry="11" transform="rotate(20 46 ${fy})" style="fill:${ink}"/><ellipse cx="74" cy="${fy}" rx="9" ry="11" transform="rotate(-20 74 ${fy})" style="fill:${ink}"/>`;
+    eye = '#FFFFFF'; er = 3.4; }
+  if(d.r===2) acc += sparkle(14,30,9,'#FFD84A')+sparkle(106,22,7,'#FFD84A')+sparkle(108,96,6,'#FFFFFF')+sparkle(10,96,5,'#FFD84A');
+  const face = `<circle cx="47" cy="${fy}" r="${er}" style="fill:${eye}"/><circle cx="73" cy="${fy}" r="${er}" style="fill:${eye}"/>
+    <circle cx="48.6" cy="${fy-1.6}" r="1.5" style="fill:${eye===ink?'#fff':ink}"/><circle cx="74.6" cy="${fy-1.6}" r="1.5" style="fill:${eye===ink?'#fff':ink}"/>
+    <ellipse cx="37" cy="${fy+9}" rx="6" ry="3.6" style="fill:#FF8FB0;opacity:.6"/><ellipse cx="83" cy="${fy+9}" rx="6" ry="3.6" style="fill:#FF8FB0;opacity:.6"/>
+    <path d="M55 ${fy+7}Q57.5 ${fy+11} 60 ${fy+7}Q62.5 ${fy+11} 65 ${fy+7}" style="fill:none;stroke:${ink}" stroke-width="2.2" stroke-linecap="round"/>`;
+  return `<svg viewBox="0 -12 120 128" aria-hidden="true"><g style="fill:${c};stroke:${out}" stroke-width="5" stroke-linejoin="round">${shape}</g><g style="fill:${c}">${shape}</g>${under}
+    <ellipse cx="44" cy="${fy-18}" rx="10" ry="5" transform="rotate(-25 44 ${fy-18})" style="fill:#fff;opacity:.45"/>${acc}${face}</svg>`;
+}
+const GIFT_SVG = `<svg viewBox="0 0 120 120" aria-hidden="true">
+  <rect x="16" y="50" width="88" height="60" rx="10" style="fill:var(--accent)"/>
+  <rect x="10" y="36" width="100" height="22" rx="8" style="fill:var(--accent)"/><rect x="10" y="50" width="100" height="8" style="fill:rgba(0,0,0,.12)"/>
+  <rect x="52" y="36" width="16" height="74" style="fill:var(--star)"/>
+  <path d="M60 36C44 10 22 20 36 32C42 37 52 37 60 36Z" style="fill:var(--star)"/><path d="M60 36C76 10 98 20 84 32C78 37 68 37 60 36Z" style="fill:var(--star)"/>
+  <circle cx="34" cy="80" r="4" style="fill:rgba(255,255,255,.55)"/><circle cx="86" cy="94" r="5" style="fill:rgba(255,255,255,.55)"/><circle cx="84" cy="70" r="3" style="fill:rgba(255,255,255,.55)"/></svg>`;
+
+// ---------- effekter ----------
+function toast(t){ const el=document.createElement('div'); el.className='toast'; el.textContent=t; document.body.appendChild(el); setTimeout(()=>el.remove(),2200); }
+function plusAt(el,txt){ const r=el.getBoundingClientRect(), p=document.createElement('div'); p.className='plus'; p.textContent=txt;
+  p.style.left=(r.left+r.width/2-18)+'px'; p.style.top=(r.top)+'px'; document.body.appendChild(p); setTimeout(()=>p.remove(),1000); }
+function confetti(n=60){ const col=['#FF5C8A','#3D7BFF','#FFC83D','#1FBF8F','#A06BFF'];
+  for(let i=0;i<n;i++){ const c=document.createElement('div'); c.className='confetti'; c.style.left=Math.random()*100+'vw';
+    c.style.background=pick(col); c.style.animationDuration=(1.6+Math.random()*1.6)+'s'; c.style.animationDelay=(Math.random()*.4)+'s';
+    document.body.appendChild(c); setTimeout(()=>c.remove(),3800); } }
+function bump(el){ el.classList.remove('squish'); void el.offsetWidth; el.classList.add('squish'); }
+
+function addStars(n, fromEl){
+  for(let i=0;i<n;i++){ S.stars++; S.toNext++; if(S.toNext>=GIFT){ S.toNext-=GIFT; S.gifts++; setTimeout(()=>{ toast('Ny pakke! Du kan åpne den snart'); sfx.open(); },500); } }
+  save(); if(fromEl) plusAt(fromEl,'+'+n); const p=document.getElementById('starcount'); if(p) p.textContent=S.stars;
+}
+function starPill(){ return `<span class="pill" aria-label="Stjerner">${ICON.star}<span id="starcount">${S.stars}</span></span>`; }
+
+// ---------- hjem ----------
+function micStatus(){
+  if(!SRC) return 'Denne nettleseren kan ikke høre tale. «Si det!» bruker da en «Jeg sa det!»-knapp.';
+  if(micBlocked) return 'Mikrofonen er ikke tillatt her. «Si det!» bruker da en «Jeg sa det!»-knapp som en voksen kan trykke.';
+  return 'Trykk «Test» og si «hello».';
+}
+function renderHome(){
+  const pct = Math.round(S.toNext/GIFT*100), left = GIFT - S.toNext;
+  app.innerHTML = `
+  <div class="bar"><h1>English<span>squish</span></h1>${starPill()}
+    <button class="icon-btn" data-act="sound" aria-label="${S.sound?'Skru av lyd':'Skru på lyd'}">${S.sound?ICON.speak:ICON.mute}</button></div>
+  ${S.gifts>0 ? `<button class="gift-cta" data-act="gift">${ICON.gift}<span>Du har ${S.gifts} ${S.gifts>1?'pakker':'pakke'} å åpne!</span></button>`:''}
+  <section class="progress">
+    <div class="row"><h2>Neste pakke</h2><small>${left} ${left===1?'stjerne':'stjerner'} igjen</small></div>
+    <div class="meter" role="progressbar" aria-valuenow="${S.toNext}" aria-valuemax="${GIFT}"><b style="width:${pct}%"></b></div>
+  </section>
+  <div class="label">Velg en lek</div>
+  <div class="modes">
+    <button class="mode m1" data-act="play" data-m="finn"><span class="glyph">🐱 <small>cat</small></span><h3>Hør og finn</h3><p>Hør ordet på engelsk og finn bildet</p></button>
+    <button class="mode m2" data-act="play" data-m="laerer"><span class="glyph">🧑‍🏫 ✋</span><h3>Hva sier læreren?</h3><p>Forstå beskjeder i klasserommet</p></button>
+    <button class="mode m3" data-act="play" data-m="lytt"><span class="glyph">📖 <small>?</small></span><h3>Lytt og svar</h3><p>Hør en liten historie og svar på spørsmål</p></button>
+    <button class="mode m4" data-act="play" data-m="si"><span class="glyph">🎤 <small>red!</small></span><h3>Si det!</h3><p>Svar på engelsk med stemmen din</p></button>
+  </div>
+  <div class="label">Tema for «Hør og finn» og «Si det!»</div>
+  <div class="levels">
+    <button class="chip" data-act="topic" data-t="all" aria-pressed="${S.topic==='all'}">Alt blandet</button>
+    ${TKEYS.map(k=>`<button class="chip" data-act="topic" data-t="${k}" aria-pressed="${S.topic===k}">${T[k].no}</button>`).join('')}
+  </div>
+  <p class="practised">Du har øvd på ${practised()} av ${ALL_WORDS.length} ord · ${Object.keys(S.miss).length} ord og setninger øves ekstra på</p>
+  <button class="btn wide" data-act="coll">Samlingen min · ${S.have.length}/${SQ.length}</button>
+  <div class="foot">
+    ${confirmReset
+      ? `<button class="btn small" data-act="reset-yes" style="color:var(--bad)">Ja, slett alt</button><button class="btn small" data-act="reset-no">Avbryt</button>`
+      : `<button class="btn small" data-act="reset">Start på nytt</button>`}
+  </div>
+  <section class="progress voicebox">
+    <div class="row"><h2>Engelsk stemme</h2><button class="btn small" data-act="testvoice">Test</button></div>
+    <label for="voicesel" class="label">Velg stemme</label>
+    <select id="voicesel"></select>
+    <div class="levels">
+      <button class="chip" data-act="rate" data-r="0.7" aria-pressed="${S.rate<.8}">Sakte</button>
+      <button class="chip" data-act="rate" data-r="0.85" aria-pressed="${S.rate>=.8&&S.rate<.95}">Normal</button>
+      <button class="chip" data-act="rate" data-r="1" aria-pressed="${S.rate>=.95}">Rask</button>
+    </div>
+    <p class="voicenote" id="voicenote">${voiceStatus()}</p>
+    <p class="voicenote">Tydeligst lyd: <b>Microsoft Edge</b> på PC/Mac (velg Libby, Sonia eller Ryan «Natural», engelsk UK). På iPad: last ned <b>Kate eller Daniel (Forbedret)</b> under Innstillinger → Tilgjengelighet → Opplest innhold → Stemmer → Engelsk.</p>
+  </section>
+  <section class="progress voicebox">
+    <div class="row"><h2>Mikrofon</h2>${SRC&&!micBlocked?'<button class="btn small" data-act="testmic">Test</button>':''}</div>
+    <p class="voicenote" id="micnote">${micStatus()}</p>
+  </section>`;
+  fillVoiceSelect();
+}
+
+// ---------- oppgaver ----------
+// Velger det som er øvd minst på; ord hun har bommet på kommer oftere igjen
+function choose(list, keyf){
+  const fresh=list.filter(x=>!G.used.has(keyf(x))), src=fresh.length?fresh:list;
+  const missed=src.filter(x=>(S.miss[keyf(x)]||0)>0);
+  let it;
+  if(missed.length && Math.random()<.4) it=pick(missed);
+  else { const min=Math.min(...src.map(x=>S.seen[keyf(x)]||0)); it=pick(src.filter(x=>(S.seen[keyf(x)]||0)<=min)); }
+  const k=keyf(it); G.used.add(k); S.seen[k]=(S.seen[k]||0)+1; save(); return it;
+}
+const ALL_WORDS = TKEYS.flatMap(k=>T[k].items.map(it=>[k,it]));
+function newTask(){
+  if(G.mode==='finn' || G.mode==='si'){
+    const [k,it] = S.topic==='all' ? choose(ALL_WORDS, x=>x[0]+':'+x[1][0]) : [S.topic, choose(T[S.topic].items, x=>S.topic+':'+x[0])];
+    const key = k+':'+it[0], pool=T[k].items;
+    if(G.mode==='si') return {k, it, key, tries:0, heard:'', hint:false};
+    return {k, it, key, opts:shuffle([it,...shuffle(pool.filter(x=>x!==it)).slice(0,3)])};
+  }
+  if(G.mode==='laerer'){
+    const it = choose(CLASS, x=>'class:'+x[0]);
+    return {it, key:'class:'+it[0], opts:shuffle([it,...shuffle(CLASS.filter(x=>x!==it)).slice(0,3)])};
+  }
+  // lytt: 3 historier x 2 spørsmål
+  const si = G.i>>1, qi = G.i&1;
+  if(qi===0) G.stories[si] = choose(STORIES, x=>'story:'+x.en.slice(0,30));
+  const st = G.stories[si], q = st.qs[qi];
+  return {st, qi, key:'story:'+st.en.slice(0,30)+':'+qi, fresh: qi===0, order:shuffle(q[2].map((_,i)=>i)), showQn:false, showText:false, showNo:false};
+}
+function markMiss(){ const t=G.task; if(!t||t.err) return; t.err=true; S.miss[t.key]=(S.miss[t.key]||0)+2; save(); }
+function markHit(){ const t=G.task; if(t && !t.err && S.miss[t.key]){ S.miss[t.key]--; if(S.miss[t.key]<=0) delete S.miss[t.key]; save(); } }
+function practised(){ return ALL_WORDS.filter(x=>S.seen[x[0]+':'+x[1][0]]).length; }
+function speakTask(slow){
+  const t=G.task; if(!t) return;
+  if(G.mode==='finn') say(word(t.it), false, slow);
+  else if(G.mode==='laerer') say(t.it[0], false, slow);
+  else if(G.mode==='si') say(T[t.k].q, false, slow);
+  else { const q=t.st.qs[t.qi][0]; if(t.fresh){ say(t.st.en,false,slow); say(q,true,slow); t.fresh=false; } else say(q,false,slow); }
+}
+function startGame(m){
+  stopListen();
+  G = {mode:m, i:0, earned:0, mistakes:0, used:new Set(), busy:false, stories:[]};
+  G.task = newTask(); view='game'; render(); setTimeout(()=>speakTask(),300);
+}
+
+function hearRow(big){ return `<div class="hear"><button class="speak${big?'':' sm'}" data-act="replay" aria-label="Hør igjen">${ICON.speak}</button><button class="slow" data-act="slow" aria-label="Hør sakte">🐢</button></div>`; }
+
+function renderGame(){
+  const t = G.task;
+  const dots = Array.from({length:ROUND},(_,i)=>`<i class="${i<G.i?'done':i===G.i?'now':''}"></i>`).join('');
+  let body = '', ans = '';
+  if(G.mode==='finn'){
+    ans = `${word(t.it)} (${t.it[2]})`;
+    body = `<div class="stage"><p class="ask">Hvilket bilde hører du?</p>${hearRow(true)}<p class="fb" id="fb"></p></div>
+      <div class="opts four">${t.opts.map(o=>`<button class="tile" data-act="pick" data-v="${esc(o[0])}" aria-label="${esc(word(o))}">${picHTML(o[1])}</button>`).join('')}</div>`;
+  } else if(G.mode==='laerer'){
+    ans = `${t.it[0]} = ${t.it[2]}`;
+    body = `<div class="stage"><div class="pic" style="font-size:72px">🧑‍🏫</div><p class="ask">Læreren sier noe. Hva skal du gjøre?</p>${hearRow(false)}<p class="fb" id="fb"></p></div>
+      <div class="opts four">${t.opts.map(o=>`<button class="tile lab" data-act="pick" data-v="${esc(o[0])}"><span>${o[1]}</span><span class="t">${o[2]}</span></button>`).join('')}</div>`;
+  } else if(G.mode==='lytt'){
+    const q = t.st.qs[t.qi];
+    ans = `${q[0]} → ${q[2][q[3]][1]}`;
+    body = `<div class="stage">
+      <div class="pic" style="font-size:72px;min-height:80px">${t.st.pic}</div>
+      <p class="ask">Historie ${(G.i>>1)+1} av 3</p>
+      <div class="hear"><button class="btn primary" data-act="story">${ICON.speak}Hør historien</button><button class="slow" data-act="slowstory" aria-label="Hør historien sakte">🐢</button></div>
+      <div class="qbox">
+        <p class="label">Spørsmål ${t.qi+1} av 2</p>
+        <div class="row"><button class="speak sm" data-act="replay" aria-label="Hør spørsmålet">${ICON.speak}</button>
+          <button class="btn small soft" data-act="qn" aria-pressed="${t.showQn}">${t.showQn?'Skjul':'Hva betyr spørsmålet?'}</button></div>
+        ${t.showQn?`<p class="eng">${esc(q[0])}</p><p class="qno">${esc(q[1])}</p>`:''}
+      </div>
+      <p class="fb" id="fb"></p>
+      <div class="tabs"><button class="btn small soft" data-act="text">${t.showText?'Skjul teksten':'Vis teksten'}</button>
+        ${t.showText?`<button class="btn small soft" data-act="textno">${t.showNo?'Skjul norsk':'På norsk'}</button>`:''}</div>
+      ${t.showText?`<div class="storytext"><p class="en">${esc(t.st.en)}</p>${t.showNo?`<p class="nor">${esc(t.st.no)}</p>`:''}</div>`:''}
+    </div>
+    <div class="opts three">${t.order.map(i=>{ const o=q[2][i]; return `<button class="tile lab" data-act="pick" data-v="${i}"><span>${picHTML(o[0])}</span><span class="t${o[0]?'':' big'}">${esc(o[1])}</span></button>`; }).join('')}</div>`;
+  } else {
+    ans = word(t.it);
+    const can = SRC && !micBlocked;
+    body = `<div class="stage">
+      <div class="pic">${picHTML(t.it[1])}</div>
+      <p class="eng">${esc(T[t.k].q)}</p><p class="qno">${esc(T[t.k].qn)} Svar på engelsk.</p>
+      ${hearRow(false)}
+      ${can ? `<button class="mic${listening?' on':''}" id="micbtn" data-act="mic" aria-label="Trykk og snakk">${ICON.mic}</button>
+               <p class="status" id="status">${t.heard ? t.heard : 'Trykk på mikrofonen og si svaret.'}</p>`
+            : `<p class="status">Si svaret høyt på engelsk! En voksen kan sjekke.</p>`}
+      ${t.hint ? `<p class="hintword">${esc(word(t.it))}</p>` : ''}
+      <div class="foot" style="justify-content:center">
+        <button class="btn small soft" data-act="hint">Hør svaret</button>
+        ${!can ? `<button class="btn primary" data-act="selfok">Jeg sa det! ✓</button>` : ''}
+        ${can && t.tries>=3 ? `<button class="btn small" data-act="skip">Neste</button>` : ''}
+      </div>
+      <p class="fb" id="fb"></p>
+    </div>`;
+  }
+  const helper = `<div class="nospeech" id="nospeech" ${S.sound&&ttsOK===false?'':'hidden'}><p>Opplesingen virker ikke i denne appen. Åpne lenken i Safari, Chrome eller Edge, eller la en voksen lese høyt.</p><button class="btn small" data-act="adult">Voksen: vis hva som skal sies</button><p id="adultans" class="adultans" hidden>${esc(ans)}</p></div>`;
+  app.innerHTML = `<div class="bar"><button class="icon-btn" data-act="home" aria-label="Hjem">${ICON.home}</button><div class="dots">${dots}</div>${starPill()}</div>${helper}${body}`;
+}
+
+function setFb(html){ const f=document.getElementById('fb'); if(f) f.innerHTML=html; }
+function nextTask(){ G.i++; if(G.i>=ROUND) return finishRound(); G.task=newTask(); G.busy=false; renderGame(); setTimeout(()=>speakTask(),250); }
+function correct(el){
+  G.busy = true; sfx.ok(); addStars(1, el); G.earned++; markHit();
+  const t = G.task; let wait = 1700;
+  if(G.mode==='finn' || G.mode==='si'){ say(word(t.it)); setFb(`${esc(word(t.it))} <span class="no">= ${esc(t.it[2])}</span>`); }
+  else if(G.mode==='laerer'){ say(t.it[0]); setFb(`${esc(t.it[0])} <span class="no">= ${esc(t.it[2])}</span>`); wait = 2300; }
+  else { const q=t.st.qs[t.qi]; say(q[2][q[3]][1]); setFb(`${esc(q[2][q[3]][1])}`); }
+  say(pick(PRAISE), true);
+  setTimeout(nextTask, wait);
+}
+function wrong(el){ G.mistakes++; markMiss(); sfx.no(); el.classList.add('no'); el.disabled=true; }
+
+// si det: lytt med mikrofon
+function doListen(){
+  if(listening){ stopListen(); renderGame(); return; }
+  const t=G.task; listening=true; renderGame();
+  const st=document.getElementById('status'); if(st) st.innerHTML='<b>Jeg lytter …</b> Si svaret nå.';
+  listen(alts=>{
+    if(G.task!==t || view!=='game') return;
+    const said = esc(alts[0]||'');
+    if(heardIt(alts, t.it)){ t.heard = `Jeg hørte: <b>«${said}»</b>`; renderGame(); correct(document.getElementById('micbtn')); }
+    else { t.tries++; markMiss(); sfx.no(); t.heard = `Jeg hørte: <b>«${said}»</b>. Prøv igjen!`;
+      if(t.tries>=2 && !t.hint){ t.hint=true; say(word(t.it)); }
+      renderGame(); }
+  }, err=>{
+    if(G.task!==t || view!=='game') return;
+    if(BLOCK_ERR.includes(err)){ micBlocked=true; toast('Mikrofonen er ikke tillatt her. Bruk «Jeg sa det!»'); }
+    else t.heard = 'Jeg hørte ingenting. Trykk og prøv igjen.';
+    renderGame();
+  });
+}
+
+function finishRound(){
+  stopListen();
+  const bonus = G.mistakes===0 ? 2 : 0;
+  if(bonus) addStars(bonus);
+  view='done'; render(); confetti(G.mistakes===0?90:50);
+  say(G.mistakes===0?'Perfect round!':'Well done!');
+}
+function renderDone(){
+  const msg = G.mistakes===0 ? 'Perfekt runde!' : G.mistakes<=3 ? 'Kjempebra!' : 'Bra jobba!';
+  app.innerHTML = `<div class="bar"><button class="icon-btn" data-act="home" aria-label="Hjem">${ICON.home}</button><span style="flex:1"></span>${starPill()}</div>
+  <div class="stage center">
+    <h2 style="font-size:36px">${msg}</h2>
+    <p class="eng">${G.mistakes===0?'Perfect round!':'Well done!'}</p>
+    <div class="bigstars">${Array.from({length:ROUND},(_,i)=>i<G.earned?ICON.star:ICON.starOff).join('')}</div>
+    <p>Du fikk ${G.earned} ${G.earned===1?'stjerne':'stjerner'}${G.mistakes===0?' + 2 i bonus for null feil':''}.</p>
+    <p style="color:var(--muted)">${GIFT-S.toNext} ${GIFT-S.toNext===1?'stjerne':'stjerner'} til neste pakke</p>
+  </div>
+  ${S.gifts>0?`<button class="gift-cta" data-act="gift">${ICON.gift}<span>Åpne pakken!</span></button>`:''}
+  <div class="foot" style="justify-content:center"><button class="btn primary" data-act="play" data-m="${G.mode}">Spill igjen</button><button class="btn" data-act="home">Velg ny lek</button></div>`;
+}
+
+// ---------- pakker og samling ----------
+function renderGift(){
+  giftTaps = 0;
+  app.innerHTML = `<div class="bar"><button class="icon-btn" data-act="home" aria-label="Hjem">${ICON.home}</button><span style="flex:1"></span>${starPill()}</div>
+  <div class="stage center" style="padding-block:32px">
+    <h2 style="font-size:28px">Hva er det i pakken?</h2>
+    <button class="gift" id="giftbox" data-act="tapgift" aria-label="Trykk på pakken">${GIFT_SVG}</button>
+    <div class="taps" id="taps"><i></i><i></i><i></i></div>
+    <p class="ask" style="font-size:19px">Trykk på pakken tre ganger!</p>
+    <p class="eng" style="font-size:18px">One, two, three!</p>
+  </div>`;
+}
+function openGift(){
+  const locked = SQ.map((d,i)=>i).filter(i=>!S.have.includes(i));
+  let id;
+  if(locked.length){
+    const want = Math.random()<.07?2:Math.random()<.27?1:0;
+    const byR = r => locked.filter(i=>SQ[i].r===r);
+    id = pick(byR(want).length?byR(want):byR(0).length?byR(0):locked);
+    S.have.push(id);
+  } else id = pick(SQ.map((d,i)=>i));
+  S.gifts = Math.max(0,S.gifts-1); save(); lastSq = {id, dup:!locked.length};
+  view='reveal'; render(); sfx.open(); confetti(80);
+  const d=SQ[id]; setTimeout(()=>{ say('You got '+d.n+'!'); say('It is '+d.cw[0]+'.', true); },400);
+}
+function renderReveal(){
+  const d = SQ[lastSq.id];
+  app.innerHTML = `<div class="bar"><button class="icon-btn" data-act="home" aria-label="Hjem">${ICON.home}</button><span style="flex:1"></span>${starPill()}</div>
+  <div class="stage center">
+    <div class="reveal"><div class="rays"></div><button class="sq-big" data-act="squish" data-id="${lastSq.id}" aria-label="Klem ${esc(d.n)}">${sqSVG(d)}</button></div>
+    <h2 style="font-size:30px">${esc(d.n)}</h2>
+    <span class="rar r${d.r}">${RAR[d.r]}</span>
+    <p><span class="eng" style="font-size:20px">It is ${esc(d.cw[0])}.</span> <span style="color:var(--muted)">(Den er ${esc(d.cw[1])}.)</span></p>
+    <p>${lastSq.dup?'Du har allerede hele samlingen. For en samler!':'Trykk på den for å klemme!'}</p>
+  </div>
+  <div class="foot" style="justify-content:center">
+    ${S.gifts>0?`<button class="btn primary" data-act="gift">Åpne neste pakke (${S.gifts})</button>`:''}
+    <button class="btn" data-act="coll">Se samlingen</button><button class="btn" data-act="home">Spill mer</button></div>`;
+}
+function renderColl(){
+  app.innerHTML = `<div class="bar"><button class="icon-btn" data-act="home" aria-label="Hjem">${ICON.home}</button><h1 style="font-size:24px;flex:1">Samlingen min</h1>${starPill()}</div>
+  <p style="color:var(--muted)">${S.have.length} av ${SQ.length} squishies. Trykk på en for å høre navnet og fargen på engelsk.</p>
+  <div class="coll">${SQ.map((d,i)=>{ const own=S.have.includes(i);
+    return own ? `<button class="card" data-act="squish" data-id="${i}"><div class="art">${sqSVG(d)}</div><span>${esc(d.n)}</span></button>`
+               : `<div class="card locked"><div class="art">${sqSVG(d,true)}</div><span>???</span></div>`; }).join('')}</div>
+  ${S.gifts>0?`<button class="gift-cta" data-act="gift">${ICON.gift}<span>Åpne pakke (${S.gifts})</span></button>`:''}`;
+}
+
+function render(){
+  if(view==='home') renderHome(); else if(view==='game') renderGame(); else if(view==='done') renderDone();
+  else if(view==='gift') renderGift(); else if(view==='reveal') renderReveal(); else renderColl();
+  window.scrollTo(0,0);
+}
+
+// ---------- hendelser ----------
+app.addEventListener('change', e=>{
+  if(e.target.id==='voicesel'){ S.voice=e.target.value; save(); pickVoice(); ttsOK=null; say('Hello! How are you?'); setTimeout(updateVoiceNote,2700); }
+});
+app.addEventListener('click', e=>{
+  const b = e.target.closest('[data-act]'); if(!b) return;
+  const act = b.dataset.act;
+  if(act==='home'){ stopListen(); try{speechSynthesis.cancel()}catch(x){} confirmReset=false; view='home'; render(); }
+  else if(act==='play'){ sfx.tap(); startGame(b.dataset.m); }
+  else if(act==='topic'){ S.topic=b.dataset.t; save(); sfx.tap(); renderHome(); }
+  else if(act==='rate'){ S.rate=+b.dataset.r; save(); renderHome(); say('Hello! How are you?'); }
+  else if(act==='sound'){ S.sound=!S.sound; save(); renderHome(); sfx.tap(); }
+  else if(act==='reset'){ confirmReset=true; renderHome(); }
+  else if(act==='reset-no'){ confirmReset=false; renderHome(); }
+  else if(act==='reset-yes'){ Object.assign(S,{stars:0,toNext:0,gifts:1,have:[]}); save(); confirmReset=false; renderHome(); toast('Alt er nullstilt'); }
+  else if(act==='coll'){ view='coll'; render(); }
+  else if(act==='gift'){ view='gift'; render(); }
+  else if(act==='replay'){ speakTask(); }
+  else if(act==='slow'){ speakTask(true); }
+  else if(act==='adult'){ const r=document.getElementById('adultans'); if(r) r.hidden=!r.hidden; }
+  else if(act==='testvoice'){ ttsOK=null; say('Hello! How are you?'); setTimeout(updateVoiceNote,2700); const n=document.getElementById('voicenote'); if(n) n.textContent='Tester …'; }
+  else if(act==='testmic'){
+    const n=document.getElementById('micnote'); if(n) n.innerHTML='<b>Jeg lytter …</b> Si «hello».';
+    listen(alts=>{ const m=document.getElementById('micnote'); if(m) m.innerHTML=`Mikrofonen virker! Jeg hørte: <b>«${esc(alts[0]||'')}»</b>`; },
+      err=>{ if(BLOCK_ERR.includes(err)) micBlocked=true; const m=document.getElementById('micnote'); if(m) m.textContent = BLOCK_ERR.includes(err) ? micStatus() : 'Jeg hørte ingenting. Prøv igjen.'; if(micBlocked) renderHome(); });
+  }
+  else if(act==='tapgift'){
+    giftTaps++; const box=document.getElementById('giftbox'); box.classList.remove('shake'); void box.offsetWidth; box.classList.add('shake');
+    tone(300+giftTaps*150,.12,'triangle'); document.querySelectorAll('#taps i').forEach((d,i)=>d.classList.toggle('on',i<giftTaps));
+    say(['one','two','three'][giftTaps-1]||'');
+    if(giftTaps>=3) setTimeout(openGift,450);
+  }
+  else if(act==='squish'){ const d=SQ[+b.dataset.id]; bump(b.querySelector('svg')||b); sfx.squish(); say(d.n+'. It is '+d.cw[0]+'.'); }
+  else if(view==='game' && G){
+    const t = G.task;
+    if(act==='story'){ say(t.st.en); }
+    else if(act==='slowstory'){ say(t.st.en,false,true); }
+    else if(act==='qn'){ t.showQn=!t.showQn; renderGame(); }
+    else if(act==='text'){ t.showText=!t.showText; if(!t.showText) t.showNo=false; renderGame(); }
+    else if(act==='textno'){ t.showNo=!t.showNo; renderGame(); }
+    else if(G.busy) return;
+    else if(act==='mic'){ doListen(); }
+    else if(act==='hint'){ markMiss(); t.hint=true; renderGame(); say(word(t.it)); }
+    else if(act==='selfok'){ correct(b); }
+    else if(act==='skip'){ G.mistakes++; markMiss(); G.busy=true; stopListen(); nextTask(); }
+    else if(act==='pick'){
+      const ok = G.mode==='lytt' ? +b.dataset.v===t.st.qs[t.qi][3] : b.dataset.v===t.it[0];
+      if(ok){ b.classList.add('ok'); document.querySelectorAll('[data-act=pick]').forEach(x=>x.disabled=true); correct(b); }
+      else { wrong(b); setTimeout(()=>speakTask(),350); }
+    }
+  }
+});
+
+render();
+</script>
+
+</body></html>
