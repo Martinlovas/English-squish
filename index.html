@@ -863,7 +863,7 @@ function renderGame(){
       <div class="foot" style="justify-content:center">
         <button class="btn small soft" data-act="hint">Hør svaret</button>
         ${!can ? `<button class="btn primary" data-act="selfok">Jeg sa det! ✓</button>` : ''}
-        ${can && t.tries>=3 ? `<button class="btn small" data-act="skip">Neste</button>` : ''}
+        ${can && t.tries>=5 ? `<button class="btn small" data-act="skip">Neste</button>` : ''}
       </div>
       <p class="fb" id="fb"></p>
     </div>`;
@@ -897,8 +897,11 @@ function doListen(){
     alts = [...alts].reverse();
     const said = esc(alts[0]||'');
     if(heardIt(alts, t.it, T[t.k].items)){ t.heard = `Jeg hørte: <b>«${said}»</b>`; renderGame(); correct(document.getElementById('micbtn')); }
-    else { t.tries++; if(t.tries>=2) markMiss(); sfx.no(); t.heard = `Jeg hørte: <b>«${said}»</b>. Prøv igjen!`;
-      if(t.tries>=2 && !t.hint){ t.hint=true; say(word(t.it)); }
+    else { t.tries++; sfx.no();
+      if(t.tries>=5){ markMiss(); t.hint=true; say(word(t.it));
+        t.heard = `Jeg hørte: <b>«${said}»</b>. Fem forsøk – ingen stjerne denne gangen. Hør ordet, si det gjerne igjen, eller trykk «Neste».`; }
+      else { t.heard = `Jeg hørte: <b>«${said}»</b>. Prøv igjen! <span class="no">(${t.tries} av 5 forsøk)</span>`;
+        if(t.tries===3 && !t.hint){ t.hint=true; say(word(t.it)); } }
       renderGame(); }
   }, err=>{
     if(G.task!==t || view!=='game') return;
