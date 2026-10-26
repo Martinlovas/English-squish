@@ -458,7 +458,7 @@ const SQ = [
   {n:'Starry Stella',s:'heart',c:'#BDEFFF',a:'bow',r:2,cw:['blue','blå']}
 ];
 const RAR = ['Vanlig','Sjelden','Glitter'];
-const GIFT = 8, ROUND = 6;
+const GIFT = 15, ROUND = 6;
 const PRAISE = ['Great!','Well done!','Super!','Good job!','Fantastic!','Yes, that is right!','Brilliant!'];
 
 // ---------- state ----------
@@ -568,30 +568,79 @@ function updateVoiceNote(){
 // ---------- mikrofon (talegjenkjenning) ----------
 const SRC = window.SpeechRecognition || window.webkitSpeechRecognition;
 let micBlocked = !SRC, listening = false, REC = null, micErr = '';
-function listen(onText, onFail){
+function listen(onText, onFail, onPartial){
   if(!SRC){ micBlocked=true; onFail('none'); return; }
   try{ speechSynthesis.cancel(); }catch(e){}
   let done=false; const fin = (f,x)=>{ if(done) return; done=true; listening=false; f(x); };
   try{
     const r = new SRC();
     r.lang = VOICE && /^en/i.test(VOICE.lang) ? VOICE.lang : 'en-GB';
-    r.interimResults=false; r.maxAlternatives=5; r.continuous=false;
-    r.onresult = e=>{ const alts=[]; for(const res of e.results) for(let i=0;i<res.length;i++) alts.push(res[i].transcript); fin(onText, alts); };
+    r.interimResults=true; r.maxAlternatives=5; r.continuous=false;
+    const heard=[];
+    r.onresult = e=>{ let final=false; const alts=[];
+      for(const res of e.results){ for(let i=0;i<res.length;i++) alts.push(res[i].transcript); if(res.isFinal) final=true; }
+      alts.forEach(a=>{ if(a && !heard.includes(a)) heard.push(a); });
+      if(onPartial && !done && onPartial(heard)){ fin(onText, heard); try{ r.abort(); }catch(x){} return; }
+      if(final) fin(onText, heard); };
     r.onerror = e=>{ micErr = e.error||'error'; fin(onFail, micErr); };
-    r.onend = ()=>fin(onFail, 'no-speech');
+    r.onend = ()=>{ if(heard.length) fin(onText, heard); else fin(onFail, 'no-speech'); };
     REC=r; listening=true; r.start();
   }catch(e){ micErr = 'start: '+(e&&e.name||'error'); fin(onFail, 'not-allowed'); }
 }
 function stopListen(){ try{ REC && REC.abort(); }catch(e){} listening=false; }
 const BLOCK_ERR = ['not-allowed','service-not-allowed','audio-capture','none','network','language-not-supported','error'];
 const norm = s => ' '+s.toLowerCase().replace(/[^a-z0-9' ]+/g,' ').replace(/\s+/g,' ').trim()+' ';
-function lev(a,b){ const m=a.length,n=b.length; if(Math.abs(m-n)>1) return 2; let p=[...Array(n+1).keys()];
+function lev(a,b){ const m=a.length,n=b.length; let p=[...Array(n+1).keys()];
   for(let i=1;i<=m;i++){ const c=[i]; for(let j=1;j<=n;j++) c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1)); p=c; } return p[n]; }
-function heardIt(alts, it){
-  const targets = it[0].split('|').map(t=>norm(t).trim());
-  if(/^\d+$/.test(it[1])) targets.push(it[1]);
-  return alts.some(a=>{ const A=norm(a);
-    return targets.some(t=> A.includes(' '+t+' ') || (!t.includes(' ') && t.length>=4 && A.trim().split(' ').some(w=>lev(w,t)<=1)));
+// Ord som høres likt ut, eller som talegjenkjenningen ofte skriver i stedet
+const SOUNDS = {to:'two',too:'two',tu:'two',for:'four',fore:'four',fo:'four',ate:'eight',won:'one',wan:'one',van:'one',tree:'three',free:'three',
+  sri:'three',fife:'five',sex:'six',sicks:'six',ten:'ten',tan:'ten',read:'red',rid:'red',blew:'blue',pair:'pear',pare:'pear',be:'bee',
+  see:'sea',sir:'sea',i:'eyes',ice:'eyes',knows:'nose',noes:'nose',hare:'hair',mom:'mum',mam:'mum',dead:'dad',bear:'bear',bare:'bear',
+  dear:'deer',our:'hour',sun:'sunny',son:'sun',night:'night',knight:'night',write:'write',right:'write',sale:'sail',tale:'tail',
+  wood:'would',grey:'grey',gray:'grey',mail:'male',flour:'flower',flower:'flower',meat:'meet',bred:'bread',bret:'bread',kat:'cat',
+  cut:'cat',dug:'dog',duck:'duck',fox:'fox',box:'box',ship:'sheep',cheap:'sheep',chip:'sheep',pick:'pig',big:'pig',bik:'pig',
+  brawn:'brown',brow:'brown',pink:'pink',green:'green',grin:'green',jello:'yellow',hello:'yellow',ret:'red',rad:'red',rat:'red',
+  hat:'hat',head:'hat',had:'hat',bet:'bed',bad:'bed',mouth:'mouse',mouse:'mouse',house:'house',horse:'horse',hoarse:'horse'};
+function pkey(w){
+  w=(w||'').toLowerCase().replace(/[^a-z]/g,'');
+  if(!w) return '';
+  w=w.replace(/^kn/,'n').replace(/^wr/,'r').replace(/^wh/,'w').replace(/ph/g,'f').replace(/gh/g,'').replace(/ck/g,'k')
+     .replace(/q/g,'k').replace(/x/g,'ks').replace(/c(?=[eiy])/g,'s').replace(/c/g,'k').replace(/z/g,'s')
+     .replace(/th/g,'t').replace(/sh|ch|tch/g,'s').replace(/dg/g,'j').replace(/v/g,'f').replace(/w/g,'u');
+  if(w.length>3) w=w.replace(/e$/,'');
+  w=w.replace(/[aeiouy]+/g,'a').replace(/(.)\1+/g,'$1');
+  return w;
+}
+function soundsLike(said, target){
+  const a=said.replace(/[^a-z0-9]/g,''), b=target.replace(/[^a-z0-9]/g,'');
+  if(!a||!b) return false;
+  if(a===b || SOUNDS[a]===b || (SOUNDS[a] && SOUNDS[a]===SOUNDS[b])) return true;
+  const ka=pkey(a), kb=pkey(b);
+  if(ka===kb) return true;
+  if(ka[0]!==kb[0]) return false;
+  const tol = kb.length<=3 ? (ka.slice(-1)===kb.slice(-1)?1:0) : kb.length<=6 ? 1 : 2;
+  if(lev(ka,kb)<=tol) return true;
+  return b.length>=5 && lev(a,b)<=Math.floor(b.length/4);
+}
+const tg = it => { const t=it[0].split('|').map(x=>norm(x).trim()).filter(Boolean); if(/^\d+$/.test(it[1])) t.push(it[1]); return t; };
+const flat = s => s.replace(/[^a-z0-9]/g,'');
+function heardIt(alts, it, pool){
+  const targets = tg(it);
+  // svar som er et annet ord i samme tema (Tuesday for Thursday, grey for green) godtas ikke
+  const others = (pool||[]).filter(x=>x!==it).flatMap(tg).filter(o=>!targets.some(t=>flat(t)===flat(o)));
+  return alts.some(a=>{ const A=norm(a), words=A.trim().split(' ').filter(Boolean);
+    if(!words.length) return false;
+    if(targets.some(t=>A.includes(' '+t+' '))) return true;
+    return targets.some(t=>{
+      const n=t.split(' ').length;
+      const wins=[]; for(let i=0;i+n<=words.length;i++) wins.push(words.slice(i,i+n).join(''));
+      if(n>1) wins.push(words.join(''));
+      return wins.some(w=>{
+        if(!soundsLike(w, t)) return false;
+        const closer = others.some(o=>{ const fo=flat(o); return w===fo || pkey(w)===pkey(fo) || lev(pkey(w),pkey(fo)) < lev(pkey(w),pkey(flat(t))); });
+        return !closer;
+      });
+    });
   });
 }
 
@@ -826,12 +875,14 @@ function renderGame(){
 function setFb(html){ const f=document.getElementById('fb'); if(f) f.innerHTML=html; }
 function nextTask(){ G.i++; if(G.i>=ROUND) return finishRound(); G.task=newTask(); G.busy=false; renderGame(); setTimeout(()=>speakTask(),250); }
 function correct(el){
-  G.busy = true; sfx.ok(); addStars(1, el); G.earned++; markHit();
-  const t = G.task; let wait = 1700;
+  G.busy = true; sfx.ok();
+  const t = G.task, star = !t.err; let wait = 1700;
+  if(star){ addStars(1, el); G.earned++; } markHit();
   if(G.mode==='finn' || G.mode==='si'){ say(word(t.it)); setFb(`${esc(word(t.it))} <span class="no">= ${esc(t.it[2])}</span>`); }
   else if(G.mode==='laerer'){ say(t.it[0]); setFb(`${esc(t.it[0])} <span class="no">= ${esc(t.it[2])}</span>`); wait = 2300; }
   else { const q=t.st.qs[t.qi]; say(q[2][q[3]][1]); setFb(`${esc(q[2][q[3]][1])}`); }
-  say(pick(PRAISE), true);
+  if(star) say(pick(PRAISE), true);
+  else { say('Yes!', true); const f=document.getElementById('fb'); if(f) f.insertAdjacentHTML('beforeend','<br><span class="no">Riktig! Stjerne får du når du klarer det på første forsøk.</span>'); wait += 600; }
   setTimeout(nextTask, wait);
 }
 function wrong(el){ G.mistakes++; markMiss(); sfx.no(); el.classList.add('no'); el.disabled=true; }
@@ -843,9 +894,10 @@ function doListen(){
   const st=document.getElementById('status'); if(st) st.innerHTML='<b>Jeg lytter …</b> Si svaret nå.';
   listen(alts=>{
     if(G.task!==t || view!=='game') return;
+    alts = [...alts].reverse();
     const said = esc(alts[0]||'');
-    if(heardIt(alts, t.it)){ t.heard = `Jeg hørte: <b>«${said}»</b>`; renderGame(); correct(document.getElementById('micbtn')); }
-    else { t.tries++; markMiss(); sfx.no(); t.heard = `Jeg hørte: <b>«${said}»</b>. Prøv igjen!`;
+    if(heardIt(alts, t.it, T[t.k].items)){ t.heard = `Jeg hørte: <b>«${said}»</b>`; renderGame(); correct(document.getElementById('micbtn')); }
+    else { t.tries++; if(t.tries>=2) markMiss(); sfx.no(); t.heard = `Jeg hørte: <b>«${said}»</b>. Prøv igjen!`;
       if(t.tries>=2 && !t.hint){ t.hint=true; say(word(t.it)); }
       renderGame(); }
   }, err=>{
@@ -853,24 +905,28 @@ function doListen(){
     if(BLOCK_ERR.includes(err)){ micBlocked=true; toast('Mikrofonen er ikke tillatt her. Bruk «Jeg sa det!»'); }
     else t.heard = 'Jeg hørte ingenting. Trykk og prøv igjen.';
     renderGame();
-  });
+  }, partial=>heardIt(partial, t.it, T[t.k].items));
 }
 
 function finishRound(){
   stopListen();
-  const bonus = G.mistakes===0 ? 2 : 0;
-  if(bonus) addStars(bonus);
-  view='done'; render(); confetti(G.mistakes===0?90:50);
-  say(G.mistakes===0?'Perfect round!':'Well done!');
+  const missed = ROUND - G.earned;
+  G.bonus = missed===0 ? 3 : missed===1 ? 1 : 0;
+  if(G.bonus) addStars(G.bonus);
+  view='done'; render(); confetti(missed===0?90:missed<=2?50:0);
+  say(missed===0?'Perfect round!':missed<=2?'Well done!':'Good try! Let\'s practise more.');
 }
 function renderDone(){
-  const msg = G.mistakes===0 ? 'Perfekt runde!' : G.mistakes<=3 ? 'Kjempebra!' : 'Bra jobba!';
+  const missed = ROUND - G.earned;
+  const msg = missed===0 ? 'Perfekt runde!' : missed===1 ? 'Kjempebra!' : missed<=3 ? 'Bra jobba!' : 'Godt forsøk!';
+  const tip = missed===0 ? 'Alle riktige på første forsøk. Du fikk 3 ekstra stjerner!' : missed===1 ? 'Bare én bom! Du fikk 1 ekstra stjerne. Klarer du alle neste gang, får du 3 ekstra.' : 'Prøv å svare riktig på første forsøk. Da får du stjerne for hver oppgave, og 3 ekstra hvis du klarer alle.';
   app.innerHTML = `<div class="bar"><button class="icon-btn" data-act="home" aria-label="Hjem">${ICON.home}</button><span style="flex:1"></span>${starPill()}</div>
   <div class="stage center">
     <h2 style="font-size:36px">${msg}</h2>
-    <p class="eng">${G.mistakes===0?'Perfect round!':'Well done!'}</p>
+    <p class="eng">${missed===0?'Perfect round!':missed<=2?'Well done!':'Good try!'}</p>
     <div class="bigstars">${Array.from({length:ROUND},(_,i)=>i<G.earned?ICON.star:ICON.starOff).join('')}</div>
-    <p>Du fikk ${G.earned} ${G.earned===1?'stjerne':'stjerner'}${G.mistakes===0?' + 2 i bonus for null feil':''}.</p>
+    <p>Du fikk ${G.earned} av ${ROUND} ${G.earned===1?'stjerne':'stjerner'}${G.bonus?` + ${G.bonus} ekstra`:''}.</p>
+    <p style="color:var(--muted);font-size:15px">${tip}</p>
     <p style="color:var(--muted)">${GIFT-S.toNext} ${GIFT-S.toNext===1?'stjerne':'stjerner'} til neste pakke</p>
   </div>
   ${S.gifts>0?`<button class="gift-cta" data-act="gift">${ICON.gift}<span>Åpne pakken!</span></button>`:''}
