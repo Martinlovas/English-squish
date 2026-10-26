@@ -568,26 +568,45 @@ function updateVoiceNote(){
 // ---------- mikrofon (talegjenkjenning) ----------
 const SRC = window.SpeechRecognition || window.webkitSpeechRecognition;
 let micBlocked = !SRC, listening = false, REC = null, micErr = '';
+// Lytter i opptil 8 sekunder: hvis mikrofonen slår seg av uten å ha hørt noe, starter den stille på nytt
+let listenGen = 0;
 function listen(onText, onFail, onPartial){
   if(!SRC){ micBlocked=true; onFail('none'); return; }
   try{ speechSynthesis.cancel(); }catch(e){}
-  let done=false; const fin = (f,x)=>{ if(done) return; done=true; listening=false; f(x); };
-  try{
-    const r = new SRC();
-    r.lang = VOICE && /^en/i.test(VOICE.lang) ? VOICE.lang : 'en-GB';
-    r.interimResults=true; r.maxAlternatives=5; r.continuous=false;
-    const heard=[];
+  const gen = ++listenGen, t0 = Date.now(), heard = [];
+  let done=false, round=0;
+  const fin = (f,x)=>{ if(done) return; done=true; if(gen===listenGen) listening=false; f(x); };
+  const startOne = ()=>{
+    if(done) return;
+    if(gen!==listenGen) return fin(onFail,'aborted');
+    const first = round++===0;
+    let r;
+    try{
+      r = new SRC();
+      r.lang = VOICE && /^en/i.test(VOICE.lang) ? VOICE.lang : 'en-GB';
+      r.interimResults=true; r.maxAlternatives=5; r.continuous=false;
+    }catch(e){ micErr='start: '+(e&&e.name||'error'); return fin(onFail, first?'not-allowed':'no-speech'); }
     r.onresult = e=>{ let final=false; const alts=[];
       for(const res of e.results){ for(let i=0;i<res.length;i++) alts.push(res[i].transcript); if(res.isFinal) final=true; }
-      alts.forEach(a=>{ if(a && !heard.includes(a)) heard.push(a); });
+      alts.forEach(a=>{ if(a && a.trim() && !heard.includes(a)) heard.push(a); });
       if(onPartial && !done && onPartial(heard)){ fin(onText, heard); try{ r.abort(); }catch(x){} return; }
-      if(final) fin(onText, heard); };
-    r.onerror = e=>{ micErr = e.error||'error'; fin(onFail, micErr); };
-    r.onend = ()=>{ if(heard.length) fin(onText, heard); else fin(onFail, 'no-speech'); };
-    REC=r; listening=true; r.start();
-  }catch(e){ micErr = 'start: '+(e&&e.name||'error'); fin(onFail, 'not-allowed'); }
+      if(final && heard.length) fin(onText, heard); };
+    r.onerror = e=>{
+      const er = e.error||'error';
+      if(er==='no-speech' || er==='aborted') return;          // håndteres i onend
+      if(!first && er!=='audio-capture') return;               // omstart som feilet: behandles som stillhet
+      micErr = er; fin(onFail, er); };
+    r.onend = ()=>{
+      if(done) return;
+      if(heard.length) return fin(onText, heard);
+      if(gen!==listenGen) return fin(onFail,'aborted');
+      if(Date.now()-t0 < 8000) setTimeout(startOne, 120); else fin(onFail,'no-speech'); };
+    REC=r;
+    try{ r.start(); }catch(e){ micErr='start: '+(e&&e.name||'error'); fin(onFail, first?'not-allowed':'no-speech'); }
+  };
+  listening=true; startOne();
 }
-function stopListen(){ try{ REC && REC.abort(); }catch(e){} listening=false; }
+function stopListen(){ listenGen++; try{ REC && REC.abort(); }catch(e){} listening=false; }
 const BLOCK_ERR = ['not-allowed','service-not-allowed','audio-capture','none','network','language-not-supported','error'];
 const norm = s => ' '+s.toLowerCase().replace(/[^a-z0-9' ]+/g,' ').replace(/\s+/g,' ').trim()+' ';
 function lev(a,b){ const m=a.length,n=b.length; let p=[...Array(n+1).keys()];
@@ -628,17 +647,21 @@ function soundsLike(said, target){
 }
 const tg = it => { const t=it[0].split('|').map(x=>norm(x).trim()).filter(Boolean); if(/^\d+$/.test(it[1])) t.push(it[1]); return t; };
 const flat = s => s.replace(/[^a-z0-9]/g,'');
+const STOP = new Set(['its','it','is','a','an','the','this','that','thats','i','im','am','are','my','number','colour','color','called','um','uh','er','eh','ehm','okay','ok','so','and','like']);
 function heardIt(alts, it, pool){
   const targets = tg(it);
   // svar som er et annet ord i samme tema (Tuesday for Thursday, grey for green) godtas ikke
   const others = (pool||[]).filter(x=>x!==it).flatMap(tg).filter(o=>!targets.some(t=>flat(t)===flat(o)));
-  return alts.some(a=>{ const A=norm(a), words=A.trim().split(' ').filter(Boolean);
-    if(!words.length) return false;
+  return alts.some(a=>{ const A=norm(a), all=A.trim().split(' ').filter(Boolean);
+    if(!all.length) return false;
     if(targets.some(t=>A.includes(' '+t+' '))) return true;
     return targets.some(t=>{
+      const tw=t.split(' ').map(flat);
+      const words=all.filter(w=>!STOP.has(flat(w)) || tw.includes(flat(w)));
+      if(!words.length) return false;
       const n=t.split(' ').length;
       const wins=[]; for(let i=0;i+n<=words.length;i++) wins.push(words.slice(i,i+n).join(''));
-      if(n>1) wins.push(words.join(''));
+      if(n>1){ wins.push(words.join('')); for(let i=0;i+n<=all.length;i++) wins.push(all.slice(i,i+n).join('')); }
       return wins.some(w=>{
         if(!soundsLike(w, t)) return false;
         const closer = others.some(o=>{ const fo=flat(o); return w===fo || pkey(w)===pkey(fo) || lev(pkey(w),pkey(fo)) < lev(pkey(w),pkey(flat(t))); });
@@ -861,7 +884,8 @@ function renderGame(){
       <p class="eng">${esc(T[t.k].q)}</p><p class="qno">${esc(T[t.k].qn)} Svar på engelsk.</p>
       ${hearRow(false)}
       ${can ? `<button class="mic${listening?' on':''}" id="micbtn" data-act="mic" aria-label="Trykk og snakk">${ICON.mic}</button>
-               <p class="status" id="status">${t.heard ? t.heard : 'Trykk på mikrofonen og si svaret.'}</p>`
+               <p class="status" id="status">${t.heard ? t.heard : 'Trykk på mikrofonen og si svaret.'}</p>
+               <p class="qno">${frameTip(t.k)}</p>`
             : `<p class="status">Si svaret høyt på engelsk! En voksen kan sjekke.</p>`}
       ${t.hint ? `<p class="hintword">${esc(word(t.it))}</p>` : ''}
       <div class="foot" style="justify-content:center">
@@ -876,6 +900,11 @@ function renderGame(){
   app.innerHTML = `<div class="bar"><button class="icon-btn" data-act="home" aria-label="Hjem">${ICON.home}</button><div class="dots">${dots}</div>${starPill()}</div>${helper}${body}`;
 }
 
+function frameTip(k){
+  if(/^Say it/.test(T[k].q)) return 'Tips: Si ordet tydelig, gjerne to ganger.';
+  const f = {actions:"I'm …", feelings:"I'm …", family:"It's my …", colours:"It's …", numbers:"It's …", weather:"It's …"}[k] || "It's a …";
+  return `Tips: Si hele setningen, for eksempel «${f}». Da hører mikrofonen deg bedre.`;
+}
 function setFb(html){ const f=document.getElementById('fb'); if(f) f.innerHTML=html; }
 function nextTask(){ G.i++; if(G.i>=ROUND) return finishRound(); G.task=newTask(); G.busy=false; renderGame(); setTimeout(()=>speakTask(),250); }
 function correct(el){
@@ -910,7 +939,7 @@ function doListen(){
   }, err=>{
     if(G.task!==t || view!=='game') return;
     if(BLOCK_ERR.includes(err)){ micBlocked=true; toast('Mikrofonen er ikke tillatt her. Bruk «Jeg sa det!»'); }
-    else t.heard = 'Jeg hørte ingenting. Trykk og prøv igjen.';
+    else t.heard = 'Jeg hørte ingenting. Trykk og prøv igjen, og si gjerne hele setningen.';
     renderGame();
   }, partial=>heardIt(partial, t.it, T[t.k].items));
 }
