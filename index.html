@@ -593,7 +593,8 @@ const norm = s => ' '+s.toLowerCase().replace(/[^a-z0-9' ]+/g,' ').replace(/\s+/
 function lev(a,b){ const m=a.length,n=b.length; let p=[...Array(n+1).keys()];
   for(let i=1;i<=m;i++){ const c=[i]; for(let j=1;j<=n;j++) c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1)); p=c; } return p[n]; }
 // Ord som høres likt ut, eller som talegjenkjenningen ofte skriver i stedet
-const SOUNDS = {to:'two',too:'two',tu:'two',for:'four',fore:'four',fo:'four',ate:'eight',won:'one',wan:'one',van:'one',tree:'three',free:'three',
+const SOUNDS = {b:'bee',bea:'bee',bi:'bee',bee:'bee',pee:'bee',p:'bee',ben:'pen',benn:'pen',penn:'pen',pan:'pen',pain:'pen',pin:'pen',penny:'pen',
+  c:'sea',t:'tea',i:'eyes',o:'owl',u:'ewe',k:'cake',to:'two',too:'two',tu:'two',for:'four',fore:'four',fo:'four',ate:'eight',won:'one',wan:'one',van:'one',tree:'three',free:'three',
   sri:'three',fife:'five',sex:'six',sicks:'six',ten:'ten',tan:'ten',read:'red',rid:'red',blew:'blue',pair:'pear',pare:'pear',be:'bee',
   see:'sea',sir:'sea',i:'eyes',ice:'eyes',knows:'nose',noes:'nose',hare:'hair',mom:'mum',mam:'mum',dead:'dad',bear:'bear',bare:'bear',
   dear:'deer',our:'hour',sun:'sunny',son:'sun',night:'night',knight:'night',write:'write',right:'write',sale:'sail',tale:'tail',
@@ -617,6 +618,9 @@ function soundsLike(said, target){
   if(a===b || SOUNDS[a]===b || (SOUNDS[a] && SOUNDS[a]===SOUNDS[b])) return true;
   const ka=pkey(a), kb=pkey(b);
   if(ka===kb) return true;
+  // korte ord: b/p, d/t, g/k og f/v forveksles lett av talegjenkjenningen
+  const soft = k => k.length<=3 ? k.replace(/^p/,'b').replace(/^t/,'d').replace(/^k/,'g').replace(/p$/,'b').replace(/t$/,'d').replace(/k$/,'g') : k;
+  if(soft(ka)===soft(kb)) return true;
   if(ka[0]!==kb[0]) return false;
   const tol = kb.length<=3 ? (ka.slice(-1)===kb.slice(-1)?1:0) : kb.length<=6 ? 1 : 2;
   if(lev(ka,kb)<=tol) return true;
