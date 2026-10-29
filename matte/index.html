@@ -164,7 +164,27 @@ p{margin:0}
 .cnt{display:flex;flex-direction:column;align-items:center;gap:2px;font-size:clamp(24px,7.5vw,32px);line-height:1.2;letter-spacing:2px}
 .code{width:100%;box-sizing:border-box;text-align:left;background:var(--soft);border-radius:14px;padding:12px 14px;font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;font-size:17px;line-height:1.6;overflow-wrap:anywhere}
 .opts.two{grid-template-columns:1fr 1fr}
+.opts.three .tile:not(.word){font-size:clamp(26px,8vw,40px)}
 .mixed{display:inline-flex;align-items:center;gap:.18em}
+.explain{width:100%;box-sizing:border-box;background:var(--soft);border-radius:18px;padding:14px;text-align:left;display:flex;flex-direction:column;gap:12px}
+.explain h3{font-size:19px;display:flex;align-items:center;gap:8px}
+.exstep{display:flex;gap:10px;align-items:flex-start;font-size:18px;line-height:1.45;animation:up2 .3s}
+.exstep>div{min-width:0;flex:1;display:flex;flex-direction:column;gap:8px}
+.exn{flex:none;width:28px;height:28px;border-radius:50%;background:var(--math);color:#fff;display:grid;place-items:center;font-family:var(--display);font-size:15px}
+.exstep b{color:var(--good)}
+.exstep .vis{background:var(--paper);border-radius:12px;padding:8px;overflow-x:auto}
+.exrow{display:flex;gap:8px;flex-wrap:wrap}
+.exdone{font-family:var(--display);font-size:18px;color:var(--accent)}
+.ptab,.coltab{border-collapse:collapse;font-family:var(--display);font-variant-numeric:tabular-nums;margin:0 auto}
+.ptab th{font:700 12px var(--read);color:var(--muted);padding:2px 8px;border-bottom:2px solid var(--line)}
+.ptab td{font-size:28px;text-align:center;padding:2px 8px}
+.ptab .hi{color:var(--accent)}
+.coltab td{font-size:30px;width:1.1em;text-align:center;padding:0 1px}
+.coltab td.op{color:var(--math);width:1em}
+.coltab tr.sum td{border-top:3px solid var(--fg);color:var(--good)}
+.coltab tr.sum td.op{border-top:none}
+.arrow{text-align:center;color:var(--muted);font-size:22px;line-height:1}
+@keyframes up2{from{opacity:0;transform:translateY(8px)}}
 .pad.ext{grid-template-columns:repeat(4,1fr)}
 .key.span3{grid-column:span 3}
 .key.sym{color:var(--math)}
@@ -500,18 +520,18 @@ const GEN = {
 };
 // tekstoppgaver med hester (flervalg, leses høyt)
 const STORY = [
-  ()=>{const a=R(8,18),b=R(2,a-2);return [`I stallen står det <b>${a}</b> hester. <b>${b}</b> hester går ut på beitet.`,'Hvor mange hester er igjen i stallen?',a-b,[a+b,a-b+1,b]]},
-  ()=>{const a=R(4,12),b=R(3,12);return [`Ponnien spiser <b>${a}</b> gulrøtter om morgenen og <b>${b}</b> om kvelden.`,'Hvor mange gulrøtter spiser den til sammen?',a+b,[a+b+1,Math.abs(a-b),a+b-1]]},
-  ()=>{const n=R(2,9);return [`Hver hest har <b>4</b> hover. Det står <b>${n}</b> hester på beitet.`,'Hvor mange hover er det til sammen?',4*n,[4+n,4*n+4,4*n-4]]},
-  ()=>{const t=pick([2,3,4,5]),k=R(2,8);return [`Det er <b>${t}</b> ponnier i hver innhegning. Det er <b>${k}</b> innhegninger.`,'Hvor mange ponnier er det til sammen?',t*k,[t+k,t*k+t,t*k-1]]},
-  ()=>{const n=pick([2,3,4,5]),e=R(2,6);return [`<b>${n*e}</b> epler skal deles likt på <b>${n}</b> ponnier.`,'Hvor mange epler får hver ponni?',e,[n*e-n,e+1,n]]},
-  ()=>{const p=R(42,95),b=100;return [`En ridetime koster <b>${p} kr</b>. Du betaler med <b>${b} kr</b>.`,'Hvor mange kroner får du igjen?',b-p,[b-p+10,b-p-10,p]]},
-  ()=>{const a=R(140,165),b=R(90,110);return [`Dølahesten er <b>${a} cm</b> høy. Shetlandsponnien er <b>${b} cm</b> høy.`,'Hvor mange centimeter høyere er dølahesten?',a-b,[a+b,a-b+10,a-b-10]]},
-  ()=>{const a=R(25,60),p=R(a+5,a+40);return [`Du har <b>${a} kr</b>. En høyballe koster <b>${p} kr</b>.`,'Hvor mange kroner mangler du?',p-a,[p+a,p-a+1,p-a+10]]},
-  ()=>{const n=R(2,8);return [`Hester har <b>4</b> bein. På beitet ser du <b>${4*n}</b> hestebein.`,'Hvor mange hester er det?',n,[4*n-4,n+4,n+1]]},
-  ()=>{const a=R(120,300),b=R(100,250);return [`Første dag rir Ida <b>${a} meter</b>. Andre dag rir hun <b>${b} meter</b>.`,'Hvor mange meter rir hun til sammen?',a+b,[Math.abs(a-b),a+b+100,a+b-10]]},
-  ()=>{const t=R(2,5),d=pick([2,3,4,5]);return [`Hver ponni får <b>${t}</b> sukkerbiter. Det er <b>${d}</b> ponnier.`,'Hvor mange sukkerbiter trengs?',t*d,[t+d,t*d+1,t*d-t]]},
-  ()=>{const a=R(20,40),b=R(10,a-5);return [`Det er <b>${a}</b> barn på rideleir. <b>${b}</b> av dem rir på ponni. Resten rir på hest.`,'Hvor mange rir på hest?',a-b,[a+b,b,a-b+2]]}
+  ()=>{const a=R(8,18),b=R(2,a-2);return [`I stallen står det <b>${a}</b> hester. <b>${b}</b> hester går ut på beitet.`,'Hvor mange hester er igjen i stallen?',a-b,[a+b,a-b+1,b],`Hestene går ut, så det blir færre. Vi trekker fra: ${a} − ${b} = ${a-b}.`]},
+  ()=>{const a=R(4,12),b=R(3,12);return [`Ponnien spiser <b>${a}</b> gulrøtter om morgenen og <b>${b}</b> om kvelden.`,'Hvor mange gulrøtter spiser den til sammen?',a+b,[a+b+1,Math.abs(a-b),a+b-1],`Vi legger sammen morgen og kveld: ${a} + ${b} = ${a+b}.`]},
+  ()=>{const n=R(2,9);return [`Hver hest har <b>4</b> hover. Det står <b>${n}</b> hester på beitet.`,'Hvor mange hover er det til sammen?',4*n,[4+n,4*n+4,4*n-4],`${n} hester med 4 hover hver. Vi ganger: ${n} · 4 = ${4*n}.`]},
+  ()=>{const t=pick([2,3,4,5]),k=R(2,8);return [`Det er <b>${t}</b> ponnier i hver innhegning. Det er <b>${k}</b> innhegninger.`,'Hvor mange ponnier er det til sammen?',t*k,[t+k,t*k+t,t*k-1],`${k} innhegninger med ${t} ponnier i hver: ${k} · ${t} = ${t*k}.`]},
+  ()=>{const n=pick([2,3,4,5]),e=R(2,6);return [`<b>${n*e}</b> epler skal deles likt på <b>${n}</b> ponnier.`,'Hvor mange epler får hver ponni?',e,[n*e-n,e+1,n],`Vi deler likt: ${n*e} : ${n} = ${e}. Sjekk: ${n} · ${e} = ${n*e}.`]},
+  ()=>{const p=R(42,95),b=100;return [`En ridetime koster <b>${p} kr</b>. Du betaler med <b>${b} kr</b>.`,'Hvor mange kroner får du igjen?',b-p,[b-p+10,b-p-10,p],`Du får igjen forskjellen: ${b} − ${p} = ${b-p}. Du kan også telle opp fra ${p} til ${b}.`]},
+  ()=>{const a=R(140,165),b=R(90,110);return [`Dølahesten er <b>${a} cm</b> høy. Shetlandsponnien er <b>${b} cm</b> høy.`,'Hvor mange centimeter høyere er dølahesten?',a-b,[a+b,a-b+10,a-b-10],`Hvor mye høyere? Vi finner forskjellen: ${a} − ${b} = ${a-b}.`]},
+  ()=>{const a=R(25,60),p=R(a+5,a+40);return [`Du har <b>${a} kr</b>. En høyballe koster <b>${p} kr</b>.`,'Hvor mange kroner mangler du?',p-a,[p+a,p-a+1,p-a+10],`Hvor mye mangler? Fra ${a} opp til ${p}: ${p} − ${a} = ${p-a}.`]},
+  ()=>{const n=R(2,8);return [`Hester har <b>4</b> bein. På beitet ser du <b>${4*n}</b> hestebein.`,'Hvor mange hester er det?',n,[4*n-4,n+4,n+1],`Hver hest har 4 bein. Hvor mange firere er det i ${4*n}? ${4*n} : 4 = ${n}.`]},
+  ()=>{const a=R(120,300),b=R(100,250);return [`Første dag rir Ida <b>${a} meter</b>. Andre dag rir hun <b>${b} meter</b>.`,'Hvor mange meter rir hun til sammen?',a+b,[Math.abs(a-b),a+b+100,a+b-10],`Til sammen betyr pluss: ${a} + ${b} = ${a+b}.`]},
+  ()=>{const t=R(2,5),d=pick([2,3,4,5]);return [`Hver ponni får <b>${t}</b> sukkerbiter. Det er <b>${d}</b> ponnier.`,'Hvor mange sukkerbiter trengs?',t*d,[t+d,t*d+1,t*d-t],`${d} ponnier får ${t} hver: ${d} · ${t} = ${t*d}.`]},
+  ()=>{const a=R(20,40),b=R(10,a-5);return [`Det er <b>${a}</b> barn på rideleir. <b>${b}</b> av dem rir på ponni. Resten rir på hest.`,'Hvor mange rir på hest?',a-b,[a+b,b,a-b+2],`Resten er de som er igjen: ${a} − ${b} = ${a-b}.`]}
 ];
 GEN.tekst = function(){
   const i=R(0,STORY.length-1), [txt,q,ans,c]=STORY[i]();
@@ -900,34 +920,34 @@ Object.assign(GEN, {
 
 // ---------- tekstoppgaver for 1.–2. og 5.–7. trinn ----------
 const STORY12 = [
-  ()=>{const a=R(2,8),b=R(1,Math.min(9,(S.grade===1?10:20)-a));return [`I stallen står det <b>${a}</b> hester. <b>${b}</b> hester til kommer inn.`,'Hvor mange hester er det i stallen nå?',a+b,[a+b+1,a+b-1,Math.abs(a-b)]]},
-  ()=>{const a=R(5,S.grade===1?10:18),b=R(1,a-1);return [`Det er <b>${a}</b> ponnier på beitet. <b>${b}</b> av dem går inn i stallen.`,'Hvor mange ponnier er igjen på beitet?',a-b,[a+b,a-b+1,b]]},
-  ()=>{const n=R(2,S.grade===1?5:9);return [`Hver hest har <b>2</b> ører. Det står <b>${n}</b> hester ved gjerdet.`,'Hvor mange ører er det til sammen?',2*n,[n+2,2*n+1,n]]},
-  ()=>{const a=2*R(2,S.grade===1?5:10);return [`Du har <b>${a}</b> gulrøtter. Du deler dem likt mellom <b>2</b> ponnier.`,'Hvor mange gulrøtter får hver ponni?',a/2,[a/2+1,a-2,a]]},
-  ()=>{const a=R(3,9),b=R(1,a-1);return [`Fjordis spiste <b>${a}</b> epler. Dølla spiste <b>${b}</b> epler.`,'Hvor mange flere epler spiste Fjordis?',a-b,[a+b,a-b+1,b]]},
-  ()=>{const b=R(1,9);return [`Det er <b>10</b> hester i stallen. <b>${b}</b> av dem er brune. Resten er hvite.`,'Hvor mange hester er hvite?',10-b,[10+b,b,10-b+1]]},
-  ()=>{const a=R(2,S.grade===1?8:30),b=R(1,S.grade===1?10-a:20);return [`Ida har <b>${a} kr</b>. Hun får <b>${b} kr</b> av bestemor.`,'Hvor mange kroner har Ida nå?',a+b,[a+b+10,a+b-1,Math.abs(a-b)]]},
-  ()=>{const n=R(2,S.grade===1?4:9);return [`Hver ponni får <b>2</b> sukkerbiter. Det er <b>${n}</b> ponnier.`,'Hvor mange sukkerbiter trengs?',2*n,[n+2,2*n+2,n]]}
+  ()=>{const a=R(2,8),b=R(1,Math.min(9,(S.grade===1?10:20)-a));return [`I stallen står det <b>${a}</b> hester. <b>${b}</b> hester til kommer inn.`,'Hvor mange hester er det i stallen nå?',a+b,[a+b+1,a+b-1,Math.abs(a-b)],`Flere hester kommer inn, så vi legger til: ${a} + ${b} = ${a+b}.`]},
+  ()=>{const a=R(5,S.grade===1?10:18),b=R(1,a-1);return [`Det er <b>${a}</b> ponnier på beitet. <b>${b}</b> av dem går inn i stallen.`,'Hvor mange ponnier er igjen på beitet?',a-b,[a+b,a-b+1,b],`Noen går inn, så det blir færre på beitet: ${a} − ${b} = ${a-b}.`]},
+  ()=>{const n=R(2,S.grade===1?5:9);return [`Hver hest har <b>2</b> ører. Det står <b>${n}</b> hester ved gjerdet.`,'Hvor mange ører er det til sammen?',2*n,[n+2,2*n+1,n],`${n} hester med 2 ører hver. Dobbelt av ${n}: ${n} + ${n} = ${2*n}.`]},
+  ()=>{const a=2*R(2,S.grade===1?5:10);return [`Du har <b>${a}</b> gulrøtter. Du deler dem likt mellom <b>2</b> ponnier.`,'Hvor mange gulrøtter får hver ponni?',a/2,[a/2+1,a-2,a],`Del likt i to: halvparten av ${a} er ${a/2}. Sjekk: ${a/2} + ${a/2} = ${a}.`]},
+  ()=>{const a=R(3,9),b=R(1,a-1);return [`Fjordis spiste <b>${a}</b> epler. Dølla spiste <b>${b}</b> epler.`,'Hvor mange flere epler spiste Fjordis?',a-b,[a+b,a-b+1,b],`Hvor mange flere? Finn forskjellen: ${a} − ${b} = ${a-b}.`]},
+  ()=>{const b=R(1,9);return [`Det er <b>10</b> hester i stallen. <b>${b}</b> av dem er brune. Resten er hvite.`,'Hvor mange hester er hvite?',10-b,[10+b,b,10-b+1],`Alle hestene er 10. Ta bort de brune: 10 − ${b} = ${10-b}.`]},
+  ()=>{const a=R(2,S.grade===1?8:30),b=R(1,S.grade===1?10-a:20);return [`Ida har <b>${a} kr</b>. Hun får <b>${b} kr</b> av bestemor.`,'Hvor mange kroner har Ida nå?',a+b,[a+b+10,a+b-1,Math.abs(a-b)],`Hun får mer penger, så vi legger sammen: ${a} + ${b} = ${a+b}.`]},
+  ()=>{const n=R(2,S.grade===1?4:9);return [`Hver ponni får <b>2</b> sukkerbiter. Det er <b>${n}</b> ponnier.`,'Hvor mange sukkerbiter trengs?',2*n,[n+2,2*n+2,n],`${n} ponnier får 2 hver: dobbelt av ${n} er ${2*n}.`]}
 ];
 const STORY57 = [
-  ()=>{const p=R(10,29)+.5,k=2*R(1,3);return [`Kraftfôr koster <b>${nf(p)} kr</b> per kilo. Du kjøper <b>${k} kilo</b>.`,'Hvor mange kroner koster det?',p*k,[p+k,Math.floor(p)*k,p*k+5]]},
-  ()=>{const n=4*R(5,15),p=pick([25,50,75]);return [`Rideskolen har <b>${n}</b> hester. <b>${p} %</b> av dem er ponnier.`,'Hvor mange ponnier er det?',n*p/100,[p,n-n*p/100,n*p/100+5]]},
-  ()=>{const m=R(60,80);const v=[m-R(1,4),m+R(1,4)];v.push(3*m-v[0]-v[1]);return [`Isla løp tre runder på <b>${v.join('</b>, <b>')}</b> sekunder.`,'Hva var gjennomsnittstiden?',m,[m+1,m-1,v[0]+v[1]+v[2]]]},
-  ()=>{const l=R(12,40),b=R(8,25);return [`En luftegård er <b>${l} m</b> lang og <b>${b} m</b> bred.`,'Hvor mange kvadratmeter er luftegården?',l*b,[2*(l+b),l+b,l*b+10]]},
-  ()=>{const l=R(15,50),b=R(10,30);return [`Det skal settes opp gjerde rundt en innhegning som er <b>${l} m</b> lang og <b>${b} m</b> bred.`,'Hvor mange meter gjerde trengs?',2*(l+b),[l*b,l+b,2*(l+b)+10]]},
-  ()=>{const v=pick([10,12,14]),t=2.5;return [`En hest traver <b>${v} km</b> i timen.`,'Hvor langt kommer den på to og en halv time?',v*t,[v*2,v*3,v+t]]},
-  ()=>{const k=R(2,6),h=3,ho=2;return [`Du blander fôr: <b>${h}</b> deler havre og <b>${ho}</b> deler høy. Du har <b>${h*k*5} kg</b> havre.`,'Hvor mange kilo høy trenger du?',ho*k*5,[h*k*5,ho*k*5+5,k*5]]},
-  ()=>{const a=R(320,399),b=R(60,99);return [`Du har <b>500 kr</b>. Du kjøper en hjelm til <b>${a} kr</b> og en børste til <b>${b} kr</b>.`,'Hvor mange kroner har du igjen?',500-a-b,[500-a,a+b,500-a-b+10]]},
-  ()=>{const [x,y]=pick([[3,4],[2,3],[3,5],[5,6]]),n=y*R(3,8);return [`<b>${x}/${y}</b> av <b>${n}</b> hester er ute på beitet.`,'Hvor mange hester er ute?',n*x/y,[n/y,n-n*x/y,n*x/y+1]]},
-  ()=>{const a=R(2,9),b=R(1,8);return [`Om morgenen var det <b>−${a} °C</b> i stallen. Til middag var det <b>${b} °C</b>.`,'Hvor mange grader steg temperaturen?',a+b,[b-a<0?a-b:b-a,a+b+1,b]]},
+  ()=>{const p=R(10,29)+.5,k=2*R(1,3);return [`Kraftfôr koster <b>${nf(p)} kr</b> per kilo. Du kjøper <b>${k} kilo</b>.`,'Hvor mange kroner koster det?',p*k,[p+k,Math.floor(p)*k,p*k+5],`Pris per kilo ganger antall kilo: ${nf(p)} · ${k} = ${nf(p*k)} kr.`]},
+  ()=>{const n=4*R(5,15),p=pick([25,50,75]);return [`Rideskolen har <b>${n}</b> hester. <b>${p} %</b> av dem er ponnier.`,'Hvor mange ponnier er det?',n*p/100,[p,n-n*p/100,n*p/100+5],`${p} % av ${n}: først 1 % = ${n} : 100 = ${nf(n/100)}. Så ${p} · ${nf(n/100)} = ${n*p/100}.`]},
+  ()=>{const m=R(60,80);const v=[m-R(1,4),m+R(1,4)];v.push(3*m-v[0]-v[1]);return [`Isla løp tre runder på <b>${v.join('</b>, <b>')}</b> sekunder.`,'Hva var gjennomsnittstiden?',m,[m+1,m-1,v[0]+v[1]+v[2]],`Legg sammen tidene og del på 3: (${v.join(' + ')}) : 3 = ${v[0]+v[1]+v[2]} : 3 = ${m}.`]},
+  ()=>{const l=R(12,40),b=R(8,25);return [`En luftegård er <b>${l} m</b> lang og <b>${b} m</b> bred.`,'Hvor mange kvadratmeter er luftegården?',l*b,[2*(l+b),l+b,l*b+10],`Areal = lengde · bredde: ${l} · ${b} = ${l*b} m².`]},
+  ()=>{const l=R(15,50),b=R(10,30);return [`Det skal settes opp gjerde rundt en innhegning som er <b>${l} m</b> lang og <b>${b} m</b> bred.`,'Hvor mange meter gjerde trengs?',2*(l+b),[l*b,l+b,2*(l+b)+10],`Gjerdet går rundt, så vi trenger omkretsen: ${l} + ${b} + ${l} + ${b} = ${2*(l+b)} m.`]},
+  ()=>{const v=pick([10,12,14]),t=2.5;return [`En hest traver <b>${v} km</b> i timen.`,'Hvor langt kommer den på to og en halv time?',v*t,[v*2,v*3,v+t],`På 2 timer kommer hesten ${2*v} km. En halv time er ${v/2} km. ${2*v} + ${v/2} = ${nf(v*2.5)} km.`]},
+  ()=>{const k=R(2,6),h=3,ho=2;return [`Du blander fôr: <b>${h}</b> deler havre og <b>${ho}</b> deler høy. Du har <b>${h*k*5} kg</b> havre.`,'Hvor mange kilo høy trenger du?',ho*k*5,[h*k*5,ho*k*5+5,k*5],`${h*k*5} kg havre er ${h} deler, så én del er ${h*k*5} : ${h} = ${k*5} kg. Høyet er ${ho} deler: ${ho} · ${k*5} = ${ho*k*5} kg.`]},
+  ()=>{const a=R(320,399),b=R(60,99);return [`Du har <b>500 kr</b>. Du kjøper en hjelm til <b>${a} kr</b> og en børste til <b>${b} kr</b>.`,'Hvor mange kroner har du igjen?',500-a-b,[500-a,a+b,500-a-b+10],`Trekk fra begge tingene: 500 − ${a} − ${b} = ${500-a-b} kr.`]},
+  ()=>{const [x,y]=pick([[3,4],[2,3],[3,5],[5,6]]),n=y*R(3,8);return [`<b>${x}/${y}</b> av <b>${n}</b> hester er ute på beitet.`,'Hvor mange hester er ute?',n*x/y,[n/y,n-n*x/y,n*x/y+1],`${x}/${y} av ${n}: ${n} : ${y} = ${n/y}, og ${n/y} · ${x} = ${n*x/y}.`]},
+  ()=>{const a=R(2,9),b=R(1,8);return [`Om morgenen var det <b>−${a} °C</b> i stallen. Til middag var det <b>${b} °C</b>.`,'Hvor mange grader steg temperaturen?',a+b,[b-a<0?a-b:b-a,a+b+1,b],`Fra −${a} opp til 0 er ${a} grader. Fra 0 opp til ${b} er ${b} grader til. ${a} + ${b} = ${a+b}.`]},
   ()=>{const h=R(9,13),m=5*R(1,11),d=5*R(14,30),e=h*60+m+d,p=x=>String(x).padStart(2,'0'),ans=`${p(Math.floor(e/60))}:${p(e%60)}`;
-     return [`Rideturen startet <b>${p(h)}:${p(m)}</b> og varte i <b>${durW(d)}</b>.`,'Når var dere tilbake?',ans,[`${p(Math.floor((e+60)/60))}:${p(e%60)}`,`${p(Math.floor((e-10)/60))}:${p((e-10)%60)}`,`${p(h+Math.floor(d/60))}:${p(m)}`]]},
-  ()=>{const n=R(3,8),p=R(45,95);return [`En ridetime koster <b>${p} kr</b>. Mia rir <b>${n}</b> ganger.`,'Hvor mye koster det til sammen?',n*p,[n+p,n*p+p,n*p-10]]}
+     return [`Rideturen startet <b>${p(h)}:${p(m)}</b> og varte i <b>${durW(d)}</b>.`,'Når var dere tilbake?',ans,[`${p(Math.floor((e+60)/60))}:${p(e%60)}`,`${p(Math.floor((e-10)/60))}:${p((e-10)%60)}`,`${p(h+Math.floor(d/60))}:${p(m)}`],`Legg ${durW(d)} til ${p(h)}:${p(m)}. Ta hele timer først, og så minuttene. Dere var tilbake ${ans}.`]},
+  ()=>{const n=R(3,8),p=R(45,95);return [`En ridetime koster <b>${p} kr</b>. Mia rir <b>${n}</b> ganger.`,'Hvor mye koster det til sammen?',n*p,[n+p,n*p+p,n*p-10],`${n} ridetimer som koster ${p} kr hver: ${n} · ${p} = ${n*p} kr.`]}
 ];
 GEN.tekst = function(){
-  const L=STORYSET(S.grade), i=R(0,L.length-1), [txt,q,ans,c]=L[i]();
+  const L=STORYSET(S.grade), i=R(0,L.length-1), [txt,q,ans,c,why]=L[i]();
   const plain=txt.replace(/<[^>]+>/g,'');
-  return {key:`tekst${S.grade}:`+i+':'+plain,kind:'mc',ask:q,story:txt,speak:plain.replace(/(\d):(\d\d)/g,'$1 $2')+' '+q,ans:A(ans),opts:mc(ans,c,3),cols:'three',show:`Svaret er ${typeof ans==='number'?nf(ans):ans}`,autosay:true};
+  return {key:`tekst${S.grade}:`+i+':'+plain,kind:'mc',ask:q,story:txt,speak:plain.replace(/(\d):(\d\d)/g,'$1 $2')+' '+q,ans:A(ans),opts:mc(ans,c,3),cols:'three',show:`Svaret er ${typeof ans==='number'?nf(ans):ans}`,why,autosay:true};
 };
 const MODE_GEN = {
   regn: ()=> { const T=GR[S.grade].regn; return (S.topic!=='all' && T[S.topic]) ? S.topic : pick(Object.keys(T)); },
@@ -941,12 +961,209 @@ function newTask(){
   let t;
   if(redo.length && Math.random()<.35){ const r=pick(redo); t=JSON.parse(JSON.stringify(r.t)); }
   else { for(let k=0;k<8;k++){ t=GEN[MODE_GEN[G.mode]()](); if(!G.used.has(t.key)) break; } }
-  G.used.add(t.key); t.typed=''; t.tries=0; t.err=false; delete t.fbHTML; delete t.showTip; return t;
+  G.used.add(t.key); t.typed=''; t.tries=0; t.err=false; ['fbHTML','showTip','ex','exN','exSteps','wrongs'].forEach(k=>delete t[k]); return t;
 }
 function markMiss(){ const t=G.task; if(!t||t.err) return; t.err=true;
-  const clean={...t}; delete clean.typed; delete clean.tries; delete clean.err; delete clean.showTip; delete clean.fbHTML;
+  const clean={...t}; ['typed','tries','err','showTip','fbHTML','ex','exN','exSteps','wrongs'].forEach(k=>delete clean[k]);
   S.redo=S.redo.filter(r=>r.t.key!==t.key); S.redo.push({mode:G.mode,grade:S.grade,n:2,t:clean}); if(S.redo.length>60) S.redo.shift(); save(); }
 function markHit(){ const t=G.task; if(!t) return; S.done++; S.doneG[S.grade]=(S.doneG[S.grade]||0)+1; if(t.err){ save(); return; } const r=S.redo.find(r=>r.t.key===t.key); if(r){ r.n--; if(r.n<=0) S.redo=S.redo.filter(x=>x!==r); } save(); }
+
+// ================= FORKLARINGER: «Vis meg hvordan» etter feil svar =================
+// Hvert steg: {h: tekst (HTML), v: tegning (valgfri)}. Siste steg viser alltid svaret.
+
+// --- tegninger til forklaringer ---
+function jumpSVG(start, jumps){
+  const pts=[start]; jumps.forEach(j=>pts.push(r6(pts[pts.length-1]+j)));
+  const mn=Math.min(...pts), mx=Math.max(...pts), span=Math.max(mx-mn,1), pad=span*.1;
+  const X=v=>22+(v-mn+pad)/(span+2*pad)*266, Y=84;
+  let g=`<line x1="10" y1="${Y}" x2="300" y2="${Y}" style="stroke:var(--fg)" stroke-width="2.5"/>`;
+  if(mn<0 && mx>0) g+=`<line x1="${X(0)}" y1="${Y-6}" x2="${X(0)}" y2="${Y+6}" style="stroke:var(--muted)" stroke-width="2"/>`+T_(X(0),Y+38,'var(--muted)','0','middle',12);
+  pts.forEach((v,i)=>{ g+=`<line x1="${X(v)}" y1="${Y-9}" x2="${X(v)}" y2="${Y+9}" style="stroke:var(--fg)" stroke-width="3"/>`+T_(X(v),Y+26,i===pts.length-1?'var(--good)':'var(--fg)',nf(v),'middle',15); });
+  jumps.forEach((j,i)=>{ const x1=X(pts[i]), x2=X(pts[i+1]), h=Math.min(46,Math.abs(x2-x1)/2+14), mid=(x1+x2)/2;
+    g+=`<path d="M${x1} ${Y-10}Q${mid} ${Y-10-h*1.6} ${x2} ${Y-10}" style="fill:none;stroke:var(--accent)" stroke-width="3"/><circle cx="${x2}" cy="${Y-10}" r="4" style="fill:var(--accent)"/>`
+      + T_(mid,Y-14-h*.85,'var(--accent)',(j>0?'+':'−')+nf(Math.abs(j)),'middle',15); });
+  return `<svg viewBox="0 0 310 130" width="300" role="img" aria-label="Hopp på tallinjen">${g}</svg>`;
+}
+function dotsSVG(r,c){ let g=''; for(let i=0;i<r;i++) for(let j=0;j<c;j++) g+=`<circle cx="${14+j*22}" cy="${14+i*22}" r="8" style="fill:${i%2?'var(--math)':'var(--accent)'}"/>`;
+  return `<svg viewBox="0 0 ${c*22+6} ${r*22+6}" width="${Math.min(260,c*22+6)}" role="img" aria-label="${r} rader med ${c} prikker">${g}</svg>`; }
+const PLACE = {6:'100 000',5:'10 000',4:'1000',3:'100',2:'10',1:'1',[-1]:'0,1',[-2]:'0,01',[-3]:'0,001'};
+function placeTable(x, hi){ const [ip,dp='']=String(r6(Math.abs(x))).split('.'), cols=[];
+  ip.split('').forEach((d,i)=>cols.push([PLACE[ip.length-i],d])); dp.split('').forEach((d,i)=>cols.push([PLACE[-(i+1)],d]));
+  return `<table class="ptab"><tr>${cols.map((c,i)=>`<th${i===hi?' class="hi"':''}>${c[0]}</th>`).join('')}</tr><tr>${cols.map((c,i)=>`<td${i===hi?' class="hi"':''}>${c[1]}</td>`).join('')}</tr></table>`; }
+function colHTML(a,b,op,res){ const A=String(a), B=String(b), Rr=res==null?'':String(res), L=Math.max(A.length,B.length,Rr.length);
+  const row=(s,pre='')=>`<tr><td class="op">${pre}</td>${Array.from({length:L},(_,i)=>{ const d=s[s.length-L+i]; return `<td>${d==null?'':d}</td>`; }).join('')}</tr>`;
+  return `<table class="coltab">${row(A)}${row(B,op==='+'?'+':'−')}<tr class="sum"><td class="op"></td>${Array.from({length:L},(_,i)=>{ const d=Rr[Rr.length-L+i]; return `<td>${d==null?'':d}</td>`; }).join('')}</tr></table>`; }
+const PN=['Enerne','Tierne','Hundrerne','Tusenerne','Titusenerne','Hundretusenerne'];
+function colSteps(a,b,op){
+  const res=op==='+'?a+b:a-b, da=String(a).split('').reverse().map(Number), db=String(b).split('').reverse().map(Number), st=[];
+  st.push({h:'Still opp tallene under hverandre: enere under enere, tiere under tiere.',v:colHTML(a,b,op,null)});
+  let c=0;
+  for(let i=0;i<Math.max(da.length,db.length);i++){ const x=da[i]||0, y=db[i]||0; if(i>=db.length && !c && op==='-') continue;
+    if(op==='+'){ const s=x+y+c; const last=i===Math.max(da.length,db.length)-1;
+      st.push({h:`${PN[i]}: ${x} + ${y}${c?' + 1 i mente':''} = <b>${s}</b>.${s>=10&&!last?` Skriv ${s%10}, og ha 1 i mente.`:''}`}); c=s>=10?1:0; }
+    else { const xx=x-c, pre=c?(xx>=0?`${x} − 1 (vi lånte herfra) = ${xx}. `:`Her står det 0, og vi har lånt herfra. `):'';
+      if(xx<y){ st.push({h:`${PN[i]}: ${pre}${xx>=0?`${xx} − ${y} går ikke. `:''}Lån 1 fra ${PN[i+1].toLowerCase()}: ${xx+10} − ${y} = <b>${xx+10-y}</b>.`}); c=1; }
+      else { st.push({h:`${PN[i]}: ${pre}${xx} − ${y} = <b>${xx-y}</b>.`}); c=0; } } }
+  st.push({h:`Svaret står nederst: <b>${nf(res)}</b>.`,v:colHTML(a,b,op,res)}); return st; }
+
+// --- små regnestrategier for + og − ---
+function addSub(a,b,op){
+  const res=op==='+'?a+b:a-b;
+  if(a>=100||b>=100) return colSteps(a,b,op);
+  if(op==='+'){
+    if(b<10 && a%10+b>10 || (a<10&&b<10&&a+b>10)){ const f=10-a%10, r=b-f, nt=a+f;
+      return [{h:`Fyll opp til nærmeste tier først. ${a} trenger <b>${f}</b> for å bli ${nt}.`},{h:`Del ${b} i ${f} og ${r}. ${a} + ${f} = ${nt}.`},{h:`Så legger du til resten: ${nt} + ${r} = <b>${res}</b>.`,v:jumpSVG(a,[f,r])}]; }
+    if(b>=10){ const t=b-b%10, o=b%10;
+      return [{h:`Del ${b} i tiere og enere: ${t} og ${o}.`},{h:`Legg til tierne først: ${a} + ${t} = ${a+t}.`},{h:o?`Så enerne: ${a+t} + ${o} = <b>${res}</b>.`:`Det var ingen enere, så svaret er <b>${res}</b>.`,v:jumpSVG(a,o?[t,o]:[t])}]; }
+    return [{h:`Start på ${a} og hopp ${b} fram på tallinjen.`,v:jumpSVG(a,[b])},{h:`${a} + ${b} = <b>${res}</b>.`}];
+  }
+  if(b<10 && a%10<b && a%10>0 && a>10){ const f=a%10, r=b-f;
+    return [{h:`Hopp ned til tieren først. ${a} − ${f} = ${a-f}.`},{h:`Du skal ta bort ${b} til sammen. Det mangler ${r} til: ${a-f} − ${r} = <b>${res}</b>.`,v:jumpSVG(a,f?[-f,-r]:[-r])}]; }
+  if(b>=10){ const t=b-b%10, o=b%10;
+    return [{h:`Del ${b} i tiere og enere: ${t} og ${o}.`},{h:`Trekk fra tierne først: ${a} − ${t} = ${a-t}.`},{h:o?`Så enerne: ${a-t} − ${o} = <b>${res}</b>.`:`Ingen enere igjen, så svaret er <b>${res}</b>.`,v:jumpSVG(a,o?[-t,-o]:[-t])}]; }
+  return [{h:`Start på ${a} og hopp ${b} bakover på tallinjen.`,v:jumpSVG(a,[-b])},{h:`${a} − ${b} = <b>${res}</b>.`}];
+}
+function mulSteps(t,n){
+  const st=[{h:`${t} · ${n} betyr ${n} grupper med ${t} i hver.`,v:(t<=10&&n<=10)?dotsSVG(n,t):''}];
+  if(n<=5) st.push({h:`${Array(n).fill(t).join(' + ')} = <b>${t*n}</b>.`});
+  else if(n===9) st.push({h:`Snarvei: 10 · ${t} = ${10*t}. Ta bort én ${t}: ${10*t} − ${t} = <b>${9*t}</b>.`});
+  else if(n===10) st.push({h:`Gange med 10: sett en 0 bak tallet. ${t} · 10 = <b>${10*t}</b>.`});
+  else st.push({h:`Del opp: 5 · ${t} = ${5*t}. Og ${n-5} · ${t} = ${(n-5)*t}.`},{h:`Legg sammen: ${5*t} + ${(n-5)*t} = <b>${t*n}</b>.`});
+  if(t!==n) st.push({h:`Husk: ${t} · ${n} er det samme som ${n} · ${t}.`});
+  return st; }
+const dec = x => (String(x).split('.')[1]||'').length;
+
+// --- regneuttrykk med regnerekkefølge ---
+function rfSteps(tokens){
+  let T=tokens.filter(x=>x!=='='&&x!=='?').map(x=>/^[−-]?\d/.test(x)?Number(String(x).replace('−','-').replace(/ /g,'').replace(',','.')):x);
+  const show=a=>a.map(x=>typeof x==='number'?nf(x):x).join(' '), st=[{h:`Regnestykket er ${show(T)}. Husk rekkefølgen: parentes, så gange og dele, til slutt pluss og minus.`}];
+  const op=(a,o,b)=>o==='+'?a+b:o==='−'?a-b:o==='·'?a*b:a/b;
+  const i=T.indexOf('('); if(i>=0){ const j=T.indexOf(')'), v=op(T[i+1],T[i+2],T[i+3]); st.push({h:`Parentesen først: ${show(T.slice(i+1,j))} = ${nf(v)}.`}); T=[...T.slice(0,i),v,...T.slice(j+1)]; }
+  let k; while((k=T.findIndex(x=>x==='·'||x===':'))>0){ const v=op(T[k-1],T[k],T[k+1]); st.push({h:`${T[k]==='·'?'Gange':'Dele'}: ${nf(T[k-1])} ${T[k]} ${nf(T[k+1])} = ${nf(v)}. Nå står det ${show([...T.slice(0,k-1),v,...T.slice(k+2)])}.`}); T=[...T.slice(0,k-1),v,...T.slice(k+2)]; }
+  while(T.length>1){ const v=op(T[0],T[1],T[2]); st.push({h:`${T[1]==='+'?'Pluss':'Minus'}: ${nf(T[0])} ${T[1]} ${nf(T[2])} = <b>${nf(v)}</b>.`}); T=[v,...T.slice(3)]; }
+  return st; }
+
+// --- programmer (koding): følg verdien linje for linje ---
+function codeSteps(lines){
+  let x=Number(lines[0].split('=')[1]); const st=[{h:`Programmet starter med tall = ${x}.`}];
+  const L1=lines[1];
+  if(/^gjenta/.test(L1)){ const n=Number(L1.match(/\d+/)[0]), m=lines[2].match(/tall ([+·]) (\d+)/), o=m[1], d=Number(m[2]), vals=[];
+    for(let i=0;i<n;i++){ x=o==='+'?x+d:x*d; vals.push(x); }
+    st.push({h:`Løkken kjører ${n} ganger. Hver gang blir tall ${o==='+'?`${d} større`:`ganget med ${d}`}:`},{h:vals.map((v,i)=>`Runde ${i+1}: tall = ${v}`).join('<br>')},{h:`Etter siste runde skriver programmet <b>${x}</b>.`}); }
+  else if(/^hvis/.test(L1)){ const even=x%2===0;
+    st.push({h:`Er ${x} et partall? ${even?'Ja':'Nei'}, fordi det slutter på ${x%10}.`},{h:even?`Da gjør programmet linjen under «hvis»: ${x} : 2 = <b>${x/2}</b>.`:`Da hopper programmet til «ellers»: ${x} · 3 + 1 = ${x*3} + 1 = <b>${x*3+1}</b>.`}); }
+  else { const lim=Number(L1.match(/\d+/)[0]), vals=[x]; while(x<lim){ x*=2; vals.push(x); }
+    st.push({h:`Løkken fortsetter så lenge tall er mindre enn ${lim}. Tall dobles hver gang:`},{h:vals.join(' → ')},{h:`${x} er ikke mindre enn ${lim}, så løkken stopper. Programmet skriver <b>${x}</b>.`}); }
+  return st; }
+
+function EXPLAIN(t){
+  const k=t.key, pre=k.split(':')[0], P=k.slice(pre.length+1), q=P.split(':');
+  const ANS = t.kind==='num' ? nf(t.ans) : /^-?\d+(\.\d+)?$/.test(t.ans) ? nf(Number(t.ans)) : (/^\d+( \d+)?\/\d+$/.test(t.ans) ? fracH(t.ans) : esc(t.ans));
+  const end = {h:`Svaret er <b>${ANS}</b>.`, last:true};
+  let s=null, m;
+  // + og −
+  if(/^(p10|p20|p20a|p100|p100a|tiere|p1000|p10000|stor)$/.test(pre) && (m=P.match(/^(\d+)([+-])(\d+)$/))) s=addSub(+m[1],+m[3],m[2]);
+  else if(pre==='desi' && (m=P.match(/^([\d.]+)([+-])([\d.]+)$/))){ const a=+m[1], b=+m[3], d=Math.max(dec(m[1]),dec(m[3])), f=10**d, nm=d===1?'tideler':'hundredeler';
+    s=[{h:`Tenk i ${nm}: ${nf(a)} er ${Math.round(a*f)} ${nm}, og ${nf(b)} er ${Math.round(b*f)} ${nm}.`},{h:`${Math.round(a*f)} ${m[2]==='+'?'+':'−'} ${Math.round(b*f)} = ${Math.round(a*f)+(m[2]==='+'?1:-1)*Math.round(b*f)} ${nm}.`},{h:`Sett kommaet tilbake: <b>${nf(t.ans)}</b>. Husk: komma under komma når du stiller opp.`}]; }
+  // gange og dele
+  else if((pre==='gange') && (m=P.match(/^(\d+)x(\d+)$/))) s=mulSteps(+m[1],+m[2]);
+  else if((pre==='gangeTo'||pre==='gangeStor') && (m=P.match(/^(\d+)x(\d+)$/))){ const a=+m[1], b=+m[2];
+    if(pre==='gangeTo'){ const t1=a-a%10, o=a%10; s=[{h:`Del ${a} i ${t1} og ${o}.`},{h:`${t1} · ${b} = ${t1*b}.`},{h:`${o} · ${b} = ${o*b}.`},{h:`Legg sammen: ${t1*b} + ${o*b} = <b>${a*b}</b>.`}]; }
+    else { const t1=b-b%10, o=b%10; s=[{h:`Del ${b} i ${t1} og ${o}.`},{h:`${a} · ${t1} = ${a*t1}. (${a} · ${t1/10} = ${a*t1/10}, og så en 0 bak.)`},{h:`${a} · ${o} = ${a*o}.`},{h:`Legg sammen: ${a*t1} + ${a*o} = <b>${a*b}</b>.`}]; } }
+  else if(pre==='desiG' && (m=P.match(/^([\d.]+)x(\d+)$/))){ const a=+m[1], b=+m[2], A=Math.round(a*10);
+    s=[{h:`Glem kommaet et øyeblikk: ${A} · ${b} = ${A*b}.`},{h:`${nf(a)} har én desimal. Da skal svaret også ha én desimal.`},{h:`${A*b} blir <b>${nf(A*b/10)}</b>.`}]; }
+  else if(pre==='dele' && (m=P.match(/^(\d+)\/(\d+)$/))){ const a=+m[1], d=+m[2], n=a/d;
+    s=[{h:`${a} : ${d} betyr: hvor mange ganger går ${d} opp i ${a}?`},{h:`Tell ${d}-gangen: ${Array.from({length:n},(_,i)=>d*(i+1)).join(', ')}.`},{h:`Det ble ${n} hopp. ${d} · ${n} = ${a}, så ${a} : ${d} = <b>${n}</b>.`}]; }
+  else if(pre==='deling' && (m=P.match(/^(\d+)\/(\d+)$/))){ const a=+m[1], d=+m[2], big=d*10*Math.floor(a/(d*10)), rest=a-big;
+    s=[{h:`Del ${a} i to deler som er lette å dele på ${d}: ${big} og ${rest}.`},{h:`${big} : ${d} = ${big/d}.`},{h:`${rest} : ${d} = ${rest/d}.`},{h:`Legg sammen: ${big/d} + ${rest/d} = <b>${a/d}</b>.`}]; }
+  else if(pre==='deleRest'){ const a=+q[0], d=+q[1], n=Math.floor(a/d);
+    s=[{h:`Hvor mange ganger går ${d} opp i ${a}? Tell ${d}-gangen: ${Array.from({length:n+1},(_,i)=>d*(i+1)).join(', ')}.`},{h:`${d*(n+1)} er for mye. ${d} · ${n} = ${d*n} er det nærmeste under ${a}.`},{h:`Det som blir til overs: ${a} − ${d*n} = <b>${a-d*n}</b>.`}]; }
+  else if(/^(finn|finn1)$/.test(pre)){ let r;
+    if((r=P.match(/^(\d+)\+\?=(\d+)$/))) s=[{h:`Hva må vi legge til ${r[1]} for å få ${r[2]}?`},{h:`Tell opp fra ${r[1]} til ${r[2]}, eller regn ${r[2]} − ${r[1]}.`,v:+r[2]<=100?jumpSVG(+r[1],[+r[2]-+r[1]]):''},{h:`${r[2]} − ${r[1]} = <b>${+r[2]-+r[1]}</b>.`}];
+    else if((r=P.match(/^\?\+(\d+)=(\d+)$/))) s=[{h:`Et tall pluss ${r[1]} blir ${r[2]}. Vi går baklengs.`},{h:`Gjør det motsatte: ${r[2]} − ${r[1]} = <b>${+r[2]-+r[1]}</b>.`}];
+    else if((r=P.match(/^(\d+)-\?=(\d+)$/))) s=[{h:`Hvor mye må vi ta bort fra ${r[1]} for å få ${r[2]}?`},{h:`Avstanden fra ${r[2]} opp til ${r[1]}: ${r[1]} − ${r[2]} = <b>${+r[1]-+r[2]}</b>.`,v:jumpSVG(+r[1],[+r[2]-+r[1]])}];
+    else if((r=P.match(/^(\d+)x\?=(\d+)$/))) s=[{h:`${r[1]} ganger hva blir ${r[2]}? Gjør det motsatte: dele.`},{h:`Tell ${r[1]}-gangen: ${Array.from({length:+r[2]/+r[1]},(_,i)=>+r[1]*(i+1)).join(', ')}.`},{h:`${r[2]} : ${r[1]} = <b>${+r[2]/+r[1]}</b>.`}]; }
+  else if(pre==='ti'){ const mul=P.includes('x'), [a,f]=P.split(mul?'x':'/').map(Number), z=String(f).length-1;
+    s=[{h:mul?`Når du ganger med ${nf(f)}, blir tallet ${nf(f)} ganger større.`:`Når du deler på ${nf(f)}, blir tallet ${nf(f)} ganger mindre.`},{h:`Alle sifrene flytter seg ${z} plass${z>1?'er':''} mot ${mul?'venstre':'høyre'} (kommaet flytter seg mot ${mul?'høyre':'venstre'}).`,v:placeTable(a)+'<div class="arrow">↓</div>'+placeTable(t.ans)},{h:`${nf(a)} ${mul?'·':':'} ${nf(f)} = <b>${nf(t.ans)}</b>.`}]; }
+  else if(pre==='pros'){ const p=+q[0], b=+q[1], F={10:[1,10],20:[1,5],25:[1,4],50:[1,2],75:[3,4],5:[1,20]}[p];
+    s=[{h:`Prosent betyr hundredeler. ${p} % er det samme som ${fw(F[0],F[1])}.`},{h:`Finn ${fw(1,F[1])} av ${b}: ${b} : ${F[1]} = ${b/F[1]}.`},F[0]>1?{h:`Vi trenger ${F[0]} slike: ${b/F[1]} · ${F[0]} = <b>${b*p/100}</b>.`}:{h:`Så ${p} % av ${b} er <b>${b*p/100}</b>.`}]; }
+  else if(pre==='rf') s=rfSteps(t.expr);
+  else if(pre==='neg' && (m=P.match(/^(-?\d+)([+-])(-?\d+)$/))){ const a=+m[1], b=+m[3], plus=m[2]==='+', eff=plus?b:-b;
+    s=[]; if(b<0) s.push({h:plus?`Å legge til ${nf(b)} er det samme som å trekke fra ${-b}.`:`Å trekke fra ${nf(b)} er det samme som å legge til ${-b}.`});
+    s.push({h:`Start på ${nf(a)} på tallinjen og gå ${Math.abs(eff)} ${eff>0?'til høyre':'til venstre'}.`,v:jumpSVG(a,[eff])},{h:`Du lander på <b>${nf(a+eff)}</b>.`}); }
+  else if(pre==='neg7'){ const r=P.match(/^(-?\d+)([x/])(-?\d+)$/); if(r){ const a=+r[1], b=+r[3], mul=r[2]==='x', res=mul?a*b:a/b, same=(a<0)===(b<0);
+    s=[{h:`Regn uten fortegn først: ${Math.abs(a)} ${mul?'·':':'} ${Math.abs(b)} = ${Math.abs(res)}.`},{h:same?`Begge tallene har samme fortegn. Da blir svaret pluss.`:`Tallene har ulikt fortegn. Da blir svaret minus.`},{h:`Svaret er <b>${nf(res)}</b>.`}]; } }
+  else if(pre==='negT'){ const a=+q[0], c=+q[1]; s=[{h:`Termometeret starter på ${nf(a)} grader.`},{h:`Det ${c<0?'synker':'stiger'} ${Math.abs(c)} grader. Gå ${Math.abs(c)} streker ${c<0?'ned':'opp'}.`,v:jumpSVG(a,[c])},{h:`Nå viser det <b>${nf(a+c)}</b> grader.`}]; }
+  else if(pre==='brokAv'){ const [a,b]=q[0].split('/').map(Number), n=+q[1];
+    s=[{h:`${fw(a,b)} av ${n}: del ${n} i ${b} like store deler.`},{h:`Én del: ${n} : ${b} = ${n/b}.`},{h:a>1?`Vi skal ha ${a} deler: ${n/b} · ${a} = <b>${n*a/b}</b>.`:`Vi skal ha én del, så svaret er <b>${n/b}</b>.`}]; }
+  else if(pre==='lik'){ let r;
+    if((r=P.match(/^x\+(\d+)=(\d+)$/))) s=[{h:`Tenk på en vekt i balanse. Det som står på hver side, er like mye.`},{h:`Ta bort ${r[1]} på begge sider: x = ${r[2]} − ${r[1]}.`},{h:`x = <b>${r[2]-r[1]}</b>. Sjekk: ${r[2]-r[1]} + ${r[1]} = ${r[2]}.`}];
+    else if((r=P.match(/^x−(\d+)=(-?\d+)$/))) s=[{h:`Noen har tatt ${r[1]} fra x, og det ble ${r[2]}.`},{h:`Legg ${r[1]} til på begge sider: x = ${r[2]} + ${r[1]}.`},{h:`x = <b>${+r[2]+ +r[1]}</b>. Sjekk: ${+r[2]+ +r[1]} − ${r[1]} = ${r[2]}.`}];
+    else if((r=P.match(/^(\d+)x=(\d+)$/))) s=[{h:`${r[1]}x betyr ${r[1]} · x.`},{h:`Del på ${r[1]} på begge sider: x = ${r[2]} : ${r[1]}.`},{h:`x = <b>${r[2]/r[1]}</b>. Sjekk: ${r[1]} · ${r[2]/r[1]} = ${r[2]}.`}];
+    else if((r=P.match(/^(\d+)x\+(\d+)=(\d+)$/))){ const a=+r[1], c=+r[2], b=+r[3]; s=[{h:`Ta bort ${c} på begge sider: ${a}x = ${b} − ${c} = ${b-c}.`},{h:`Del på ${a} på begge sider: x = ${b-c} : ${a}.`},{h:`x = <b>${(b-c)/a}</b>. Sjekk: ${a} · ${(b-c)/a} + ${c} = ${b}.`}]; } }
+  else if(pre==='utt'){ const a=+q[q.length-1]; s=[{h:`Bytt ut bokstaven a med ${a} overalt.`},{h:`Husk at 3a betyr 3 · a. Regn gange før pluss og minus.`},{h:esc(t.show).replace(/= (-?\d+)$/,'= <b>$1</b>')}]; }
+  else if(pre==='pot' && (m=P.match(/^(\d+)\^(\d+)$/))){ const n=+m[1], e=+m[2];
+    s=[{h:`Den lille ${e}-tallet oppe betyr: gang ${n} med seg selv, ${e} ganger.`},{h:`${Array(e).fill(n).join(' · ')} = <b>${nf(n**e)}</b>.`}]; }
+  // tall og plassverdi
+  else if(/^(plass|verdi|plass2|plass4|storeT|desiP)$/.test(pre)){ const n=Number(q[0]); s=[{h:`Skriv tallet inn i en plassverditabell. Hver plass er ti ganger så mye som plassen til høyre.`,v:placeTable(n)},{h:esc(t.show)}]; }
+  else if(/^(storst|storst2|storst4|desiS|negS)$/.test(pre)){ const nums=P.split(',').map(Number).filter(x=>!isNaN(x)), srt=[...nums].sort((a,b)=>a-b);
+    s=[pre==='desiS'?{h:`Gi alle tallene like mange desimaler, så er det lettere å sammenligne: ${srt.map(x=>nf(x).includes(',')?(nf(x)+'00').replace(/(,\d{3})\d*$/,'$1'):nf(x)).join(' · ')}.`}
+      :pre==='negS'?{h:`Tenk på et termometer. Jo lenger under null, jo mindre er tallet. −10 er mindre enn −2.`}
+      :{h:`Se på sifrene fra venstre. Det første sifferet som er ulikt, avgjør hvilket tall som er størst.`},{h:`Fra minst til størst: ${srt.map(nf).join(' < ')}.`}]; }
+  else if(/^(avrund|avrund4|avrD)$/.test(pre)){ const n=Number(q[0]), to=pre==='avrD'?1:pre==='avrund4'?Number(q[1]):(n>=100?100:10), lo=Math.floor(n/to)*to, hi=lo+to;
+    s=[{h:`${nf(n)} ligger mellom ${nf(lo)} og ${nf(hi)}.`,v:jumpSVG(lo,[r6(n-lo),r6(hi-n)])},{h:`Midt imellom er ${nf(lo+to/2)}. ${nf(n)} er ${n<lo+to/2?'under':'over'} midten, så vi runder ${n<lo+to/2?'ned':'opp'}.`}]; }
+  else if(pre==='monster'){ const st=+q[0], up=q[2]==='true'; s=[{h:`Se hvor mye tallene endrer seg fra ett til det neste.`},{h:`De ${up?'øker':'minker'} med ${nf(st)} hver gang. Da gjør vi det én gang til.`}]; }
+  else if(pre==='linje'||pre==='linje20'){ const mx=pre==='linje20'?20:+q[0], v=pre==='linje20'?+q[0]:+q[1];
+    s=[{h:`Tallinjen går fra 0 til ${nf(mx)}, og det er 10 like store mellomrom. Hver strek er ${nf(mx/10)}.`},{h:Number.isInteger(v/(mx/10))?`Tell streker fra 0: pilen står på strek nummer ${v/(mx/10)}. ${v/(mx/10)} · ${nf(mx/10)} = ${nf(v)}.`:`Pilen står midt mellom ${nf(v-mx/20)} og ${nf(v+mx/20)}. Midt imellom er ${nf(v)}.`}]; }
+  else if(pre==='streker'||pre==='tell'){ const n=+q[0]; s=[{h:`Tell i femmere: ${Array.from({length:Math.floor(n/5)},(_,i)=>5*(i+1)).join(', ')||'ingen hele femmere'}.`},{h:n%5?`Så teller du de ${n%5} som er igjen.`:'Det var ingen igjen.'}]; }
+  else if(pre==='sml'){ const a=+q[0], b=+q[1]; s=[{h:a===b?`Tallene er like store. Da bruker vi likhetstegnet =.`:`${Math.max(a,b)} er størst. Den åpne munnen på tegnet skal vende mot det største tallet.`},{h:`<b>${a} ${a<b?'&lt;':a>b?'&gt;':'='} ${b}</b>`}]; }
+  else if(pre==='nabo'||pre==='nabo1'){ const n=+q[0], before=q[1]==='true'; s=[{h:`Rett ${before?'før':'etter'} betyr én ${before?'mindre':'mer'}.`,v:jumpSVG(n,[before?-1:1])}]; }
+  else if(pre==='partall'){ const n=+q[0]; s=[{h:`Se på det siste sifferet: ${n%10}.`},{h:`Partall slutter på 0, 2, 4, 6 eller 8. Da kan tallet deles i to like store grupper. ${n%10} er ${n%2?'ikke ':''}blant dem.`}]; }
+  // klokke og tid
+  else if(/^(klokke|klokkeH|klokkeHv|klokke5)$/.test(pre)){ const h=+q[0], mm=pre==='klokkeH'?0:+q[1];
+    s=[{h:`Den lange viseren viser minuttene. Den peker på ${mm===0?'12, altså hel time':`${mm/5}, altså ${mm} minutter over hel time`}.`},{h:`Den korte viseren viser timen. Den er ${mm===0?`på ${h}`:`mellom ${h} og ${h%12+1}`}.`},
+       {h:mm===0?'Hel time sier vi «klokka …».':mm===30?`Halv betyr en halvtime før neste hele time. Derfor sier vi halv ${HOURS5(h+1)}.`:mm===15?'Kvart over betyr 15 minutter over.':mm===45?'Kvart på betyr 15 minutter før neste hele time.':mm<30?`${mm<20?`${mm} minutter over ${HOURS5(h)}`:`${30-mm} minutter før halv`}.`:`${mm<45?`${mm-30} minutter over halv`:`${60-mm} minutter før ${HOURS5(h+1)}`}.`}]; }
+  else if(pre==='tidsrom'){ const h=+q[0], mm=+q[1], d=+q[2]; s=[{h:`Ridetimen starter ${clockWords5(h,mm)}.`},{h:d>=60?`Legg til hele timer først: ${Math.floor(d/60)} time${d>=120?'r':''}. Da er klokka ${clockWords5(h+Math.floor(d/60),mm)}.`:`Den varer i ${d} minutter.`},d%60?{h:`Så ${d%60} minutter til.`}:null].filter(Boolean); }
+  // penger
+  else if(/^(penger|penger1|penger2)$/.test(pre)){ const it=P.split('+').map(Number); let acc=0;
+    s=[{h:'Start med det største beløpet, og legg til ett om gangen.'},{h:it.map(v=>{ acc+=v; return acc; }).join(' → ')+' kr'}]; }
+  else if(pre==='veksel'){ const pay=+q[0], pr=+q[1], nt=Math.ceil(pr/10)*10;
+    s=[{h:`Tell opp fra prisen ${pr} kr til ${pay} kr.`},{h:nt>pr&&nt<pay?`Fra ${pr} til ${nt} er ${nt-pr} kr. Fra ${nt} til ${pay} er ${pay-nt} kr.`:`${pay} − ${pr}.`,v:nt>pr&&nt<pay?jumpSVG(pr,[nt-pr,pay-nt]):jumpSVG(pr,[pay-pr])},{h:`Til sammen: <b>${pay-pr} kr</b> tilbake.`}]; }
+  // brøk
+  else if(pre==='brok'||pre==='brok2'){ const [a,b]=q[0].split('/').map(Number); s=[{h:`Tell hvor mange like store deler det er til sammen: ${b}. Det er tallet under streken (nevneren).`},{h:`Tell hvor mange som er farget: ${a}. Det er tallet over streken (telleren).`}]; }
+  else if(pre==='brokdel'){ const d=+q[0], n=+q[1]; s=[{h:`${{2:'Halvparten',3:'En tredjedel',4:'En fjerdedel'}[d]} betyr at vi deler i ${d} like store grupper.`},{h:`${n} : ${d} = <b>${n/d}</b>.`}]; }
+  else if(pre==='brokLik'){ const [a,b]=q[0].split('/').map(Number), f=+q[1]; s=[{h:`Hvis du deler hver bit i ${f} mindre biter, blir det ${f} ganger så mange biter, men like mye farget.`},{h:`Gang både telleren og nevneren med ${f}: ${a} · ${f} = ${a*f} og ${b} · ${f} = ${b*f}.`}]; }
+  else if(pre==='brokD'){ const [a,b]=q[0].split('/').map(Number); s=[{h:`En brøk er en deling: ${a} : ${b}.`},{h:b===10||b===100?`Tideler og hundredeler kan skrives rett som desimaltall.`:`Gjør om til tideler eller hundredeler: ${fw(a,b)} = ${fw(a*(b===2?5:b===4?25:b===5?2:1),b===2?10:b===4?100:b===5?10:b)}.`}]; }
+  else if(/^bdp/.test(pre)) s=[{h:'Prosent betyr hundredeler. 1 % = 1/100 = 0,01.'},{h:'Gjør om til hundredeler, så ser du prosenten: for eksempel 1/4 = 25/100 = 0,25 = 25 %.'},{h:esc(t.show)}];
+  else if(pre==='bp'||pre==='bpu'){ const r=P.match(/^(\d+)\/(\d+)\+(\d+)(?:\/(\d+))?$/), a1=+r[1], b1=+r[2], a2=+r[3], b2=r[4]?+r[4]:b1;
+    if(b1===b2) s=[{h:`Nevnerne er like (${b1}). Da er bitene like store.`},{h:`Legg sammen tellerne: ${a1} + ${a2} = ${a1+a2}. Nevneren blir den samme.`}];
+    else { const L=b1*b2/gcd(b1,b2); s=[{h:`Nevnerne er ulike (${b1} og ${b2}). Bitene er ikke like store, så vi må gjøre dem like.`},{h:`Felles nevner: ${L}. ${fw(a1,b1)} = ${fw(a1*L/b1,L)}, og ${fw(a2,b2)} = ${fw(a2*L/b2,L)}.`},{h:`Legg sammen tellerne: ${a1*L/b1} + ${a2*L/b2} = ${a1*L/b1+a2*L/b2}. Forkort hvis det går.`}]; } }
+  else if(pre==='bgh'){ const [a,b]=q[0].split('/').map(Number), n=+q[1]; s=[{h:`${fw(a,b)} · ${n} betyr ${n} slike brøker lagt sammen.`},{h:`Gang telleren: ${a} · ${n} = ${a*n}. Nevneren er fortsatt ${b}: ${fw(a*n,b)}.`},{h:`Forkort, og gjør om til blandet tall hvis telleren er større enn nevneren.`}]; }
+  // geometri og måling
+  else if(/^(form|form1|hjorner)$/.test(pre)) s=[{h:'Tell hjørnene og sidene: trekant har 3, kvadrat og rektangel har 4, femkant har 5 og sekskant har 6. Sirkelen har ingen hjørner.'},{h:'Kvadrat: alle 4 sidene er like lange. Rektangel: to lange og to korte sider.'}];
+  else if(pre==='omkrets'){ const w=+q[0], h=+q[1]; s=[{h:'Omkretsen er hele veien rundt figuren.'},{h:`Et rektangel har to sider på ${w} og to sider på ${h}.`},{h:`${w} + ${h} + ${w} + ${h} = <b>${2*(w+h)}</b>.`}]; }
+  else if(pre==='areal'||pre==='arealR'){ const w=+q[0], h=+q[1]; s=[{h:'Arealet er hvor stor plass figuren dekker. Vi teller ruter.'},{h:`Det er ${h} rader med ${w} ruter i hver.`,v:rectSVG(w,h,'',true)},{h:`${h} · ${w} = <b>${w*h}</b>.`}]; }
+  else if(pre==='tri'){ const g=+q[0], h=+q[1]; s=[{h:'En trekant er halvparten av et rektangel med samme grunnlinje og høyde.'},{h:`Rektangelet: ${g} · ${h} = ${g*h}.`},{h:`Halvparten: ${g*h} : 2 = <b>${g*h/2}</b>.`}]; }
+  else if(pre==='vol'){ const l=+q[0], b=+q[1], h=+q[2]; s=[{h:`Bunnen av esken har plass til ${l} · ${b} = ${l*b} terninger.`},{h:`Det er ${h} lag oppå hverandre: ${l*b} · ${h} = <b>${l*b*h}</b>.`}]; }
+  else if(pre==='vinkel'){ const d=+q[0]; s=[{h:'Sammenlign med hjørnet på et ark. Det er en rett vinkel, 90°.'},{h:d<90?'Denne vinkelen er smalere enn hjørnet. Da er den spiss.':d>90?'Denne vinkelen er videre enn hjørnet. Da er den stump.':'Denne er akkurat som hjørnet. Da er den rett.'}]; }
+  else if(pre==='koord'){ const x=+q[0], y=+q[1]; s=[{h:'Start i midten, der aksene krysser (0, 0).'},{h:`Gå bortover først: ${nf(x)} ${x<0?'til venstre':'til høyre'}. Det er x.`},{h:`Så opp eller ned: ${nf(y)} ${y<0?'ned':'opp'}. Det er y.`},{h:'Vi skriver alltid (x, y): bortover først, så opp.'}]; }
+  else if(pre==='snitt'){ const v=P.split(',').map(Number), sum=v.reduce((a,b)=>a+b,0); s=[{h:`Legg sammen alle tallene: ${v.join(' + ')} = ${sum}.`},{h:`Det er ${v.length} tall. Del summen på ${v.length}: ${sum} : ${v.length} = <b>${sum/v.length}</b>.`},{h:'Gjennomsnittet er det alle ville fått hvis vi delte likt.'}]; }
+  else if(pre==='med'){ const kind=q[0], v=q[1].split(',').map(Number), srt=[...v].sort((a,b)=>a-b);
+    s=[{h:`Sorter tallene fra minst til størst: ${srt.join(', ')}.`},{h:{median:`Medianen er tallet i midten: plass nummer ${(srt.length+1)/2}.`,typetall:'Typetallet er det tallet som er med flest ganger.',variasjonsbredde:`Variasjonsbredden er største minus minste: ${srt[srt.length-1]} − ${srt[0]}.`,gjennomsnitt:'Gjennomsnitt: legg sammen og del på hvor mange tall det er.'}[kind]}]; }
+  else if(pre==='prim'){ const nums=[+q[0],...q[1].split(',').map(Number)].sort((a,b)=>a-b);
+    s=[{h:'Et primtall kan bare deles på 1 og seg selv. Sjekk om tallene kan deles på 2, 3, 5 eller 7.'},{h:nums.map(n=>{ const d=[2,3,5,7].find(d=>n%d===0&&n!==d); return d?`${n} = ${d} · ${n/d}`:`${n} går ikke å dele`; }).join('<br>')}]; }
+  else if(pre==='faktor'){ const n=+q[0], d=+q[1]; s=[{h:`«Går opp i» betyr at ${n} kan deles på tallet uten rest.`},{h:`${d} · ${n/d} = ${n}. Da går ${d} opp i ${n}.`}]; }
+  else if(pre==='kvad'){ s=[{h:'Kvadrattall: 1 · 1 = 1, 2 · 2 = 4, 3 · 3 = 9, 4 · 4 = 16, 5 · 5 = 25, 6 · 6 = 36, 7 · 7 = 49, 8 · 8 = 64, 9 · 9 = 81, 10 · 10 = 100, 11 · 11 = 121, 12 · 12 = 144.'},{h:esc(t.show)}]; }
+  else if(pre==='forh'){ const k2=+q[2]; s=[{h:'Et forhold forkortes som en brøk: del begge tallene på det samme.'},{h:esc(t.show)}]; }
+  else if(pre==='kode') s=codeSteps(P.split('|'));
+  else if(/^tekst/.test(pre) && t.why) s=[{h:'Les oppgaven og finn tallene. Hva vet vi, og hva spør de om?'},{h:esc(t.ask)},{h:esc(t.why).replace(/= ([−\d,:\s]+?)( kr| km| kg| m²| m)?\.?$/,'= <b>$1</b>$2.')}];
+  // reserve: tipset og løsningen
+  if(!s || !s.length){ s=[]; if(t.tip) s.push({h:esc(t.tip.replace(/^Tips: /,''))}); if(t.show) s.push({h:esc(t.show)}); }
+  if(!s.some(x=>/<b>/.test(x.h))) s.push(end);
+  return s.filter(Boolean);
+}
+// tekst for opplesing: brøker som ord, fjern tegninger og tags
+function speakify(h){ return h.replace(/(\S): /g,'$1. ').replace(/<span class="frac"><b>(\d+)<\/b><i>(\d+)<\/i><\/span>/g,(_,a,b)=>' '+fw(+a,+b)+' ').replace(/<br>/g,'. ').replace(/<[^>]+>/g,'').replace(/→/g,', ').replace(/&nbsp;/g,' ').replace(/(\d+)\/(\d+)/g,(_,a,b)=>fw(+a,+b)).replace(/ < /g,' er mindre enn ').replace(/&lt;/g,' er mindre enn ').replace(/&gt;/g,' er større enn ').replace(/&amp;/g,' og '); }
 
 // ---------- hesteportretter (egne tegninger) ----------
 function shade(hex,f){ const n=parseInt(hex.slice(1),16); const c=[n>>16,(n>>8)&255,n&255].map(v=>Math.max(0,Math.min(255,Math.round(f>1?v+(255-v)*(f-1):v*f)))); return `rgb(${c})`; }
@@ -1099,7 +1316,9 @@ function renderGame(){
     ${t.kind==='num'?`<div class="answer${t.typed?'':' empty'}" id="answer" aria-live="polite">${t.typed||'_'}</div>`:''}
     ${t.showTip&&t.tip?`<p class="tip">${esc(t.tip)}</p>`:''}
     <p class="fb" id="fb">${t.fbHTML||''}</p>
-    ${t.tip&&!t.showTip?`<button class="btn small soft" data-act="tip">Trenger du et tips?</button>`:''}
+    ${t.tip&&!t.showTip&&!t.tries?`<button class="btn small soft" data-act="tip">Trenger du et tips?</button>`:''}
+    ${t.tries&&!t.ex&&!G.busy?`<button class="btn primary" data-act="explain">💡 Vis meg hvordan</button>`:''}
+    ${t.ex?explainHTML(t):''}
   </div>`;
   let input='';
   if(t.kind==='num'){
@@ -1112,7 +1331,8 @@ function renderGame(){
       : `<div class="pad">${[1,2,3,4,5,6,7,8,9].map(K).join('')}
       <button class="key del" data-act="key" data-k="del" aria-label="Slett">⌫</button>${K(0)}<button class="key ok" data-act="key" data-k="ok">Svar</button></div>`;
   } else {
-    input = `<div class="opts ${t.cols||'four'}">${t.opts.map(o=>`<button class="tile${t.word?' word':''}" data-act="pick" data-v="${esc(o.v)}">${o.h}${t.unit&&!t.word?'<small style="font-size:.45em"> kr</small>':''}</button>`).join('')}</div>`;
+    const W=t.wrongs||[];
+    input = `<div class="opts ${t.cols||'four'}">${t.opts.map(o=>`<button class="tile${t.word?' word':''}${W.includes(o.v)?' no':''}" data-act="pick" data-v="${esc(o.v)}"${W.includes(o.v)?' disabled':''}>${o.h}${t.unit&&!t.word?'<small style="font-size:.45em"> kr</small>':''}</button>`).join('')}</div>`;
   }
   app.innerHTML = `<div class="bar"><button class="icon-btn" data-act="home" aria-label="Hjem">${ICON.home}</button><div class="dots">${dots}</div>${starPill()}</div>${stage}${input}`;
 }
@@ -1132,10 +1352,25 @@ function wrongNum(){
   const t=G.task; t.tries++; markMiss(); sfx.no();
   const a=document.getElementById('answer'); if(a){ a.classList.remove('no'); void a.offsetWidth; a.classList.add('no'); }
   t.typed='';
-  if(t.tries>=2){ t.fbHTML=`<span class="no">Svaret er <b style="color:var(--fg)">${nf(t.ans)}</b>. Skriv det inn.</span>`; }
-  else { t.fbHTML=`<span class="no">Ikke helt. Prøv igjen!</span>`; if(t.tip) t.showTip=true; }
+  if(t.tries>=2){ t.fbHTML=`<span class="no">Se forklaringen, og prøv igjen.</span>`; setTimeout(()=>openExplain(),420); return; }
+  t.fbHTML=`<span class="no">Ikke helt. Prøv igjen, eller se hvordan du kan tenke.</span>`;
   setTimeout(renderGame,420);
 }
+function explainHTML(t){
+  const steps=t.exSteps.slice(0,t.exN), done=t.exN>=t.exSteps.length;
+  return `<div class="explain" id="explain"><h3>💡 Slik kan du tenke</h3>
+    ${steps.map((x,i)=>`<div class="exstep"><span class="exn">${i+1}</span><div><span>${x.h}</span>${x.v?`<div class="vis">${x.v}</div>`:''}</div></div>`).join('')}
+    ${done?`<p class="exdone">Nå er det din tur! ${t.kind==='num'?'Skriv svaret med tallknappene.':'Trykk på riktig svar.'}</p>`:''}
+    <div class="exrow">${done?'':`<button class="btn primary" data-act="exnext">Neste steg ▸</button>`}<button class="btn small soft" data-act="exsay">🔊 Les opp</button></div></div>`;
+}
+function openExplain(){ const t=G&&G.task; if(!t) return; markMiss(); if(!t.exSteps) t.exSteps=EXPLAIN(t); t.ex=true; t.exN=1; renderGame(); sayStep(0);
+  const el=document.getElementById('explain'); if(el&&el.scrollIntoView) el.scrollIntoView({block:'start',behavior:'smooth'}); }
+function sayStep(i){ const t=G&&G.task; if(t&&t.exSteps&&t.exSteps[i]) say(speakify(t.exSteps[i].h)); }
+function wrongMc(b){ const t=G.task; t.tries++; markMiss(); sfx.no(); t.wrongs=(t.wrongs||[]).concat(b.dataset.v);
+  b.classList.add('no'); b.disabled=true;
+  if(t.tries>=2 && !t.ex){ setTimeout(openExplain,420); return; }
+  if(!t.ex) t.fbHTML=`<span class="no">Ikke helt. Prøv igjen, eller se hvordan du kan tenke.</span>`;
+  setTimeout(renderGame,420); }
 function keyPress(k){
   const t=G.task; if(G.busy||!t||t.kind!=='num') return;
   if(k==='del'){ t.typed=t.typed.slice(0,-1); sfx.tap(); }
@@ -1244,12 +1479,15 @@ app.addEventListener('click', e=>{
   else if(view==='game' && G){
     const t=G.task;
     if(act==='replay'){ say(t.speak); }
+    else if(act==='explain'){ openExplain(); }
+    else if(act==='exnext'){ t.exN=Math.min(t.exN+1,t.exSteps.length); renderGame(); sayStep(t.exN-1); const st=document.querySelectorAll('.exstep'); const el=st[st.length-1]; if(el&&el.scrollIntoView) el.scrollIntoView({block:'nearest',behavior:'smooth'}); }
+    else if(act==='exsay'){ sayStep(t.exN-1); }
     else if(act==='tip'){ t.showTip=true; markMiss(); renderGame(); if(t.tip) say(t.tip.replace('Tips:','')); }
     else if(G.busy) return;
     else if(act==='key'){ keyPress(b.dataset.k); }
     else if(act==='pick'){
       if(b.dataset.v===t.ans){ b.classList.add('ok'); document.querySelectorAll('[data-act=pick]').forEach(x=>x.disabled=true); correct(b); }
-      else { t.tries++; markMiss(); sfx.no(); b.classList.add('no'); b.disabled=true; }
+      else wrongMc(b);
     }
   }
 });
