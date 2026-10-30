@@ -164,6 +164,43 @@ p{margin:0}
 @keyframes up{from{transform:translate(-50%,20px);opacity:0}}
 @keyframes float{to{transform:translateY(-60px);opacity:0}}
 @keyframes fall{to{transform:translateY(105vh) rotate(720deg)}}
+/* nye moduser */
+.mgroup{display:flex;flex-direction:column;gap:10px}
+.slots{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.slot{width:clamp(36px,10.5vw,52px);height:62px;border-radius:10px;display:grid;place-items:center;font-family:var(--read);font-weight:700;font-size:36px;background:var(--soft);border-bottom:3px solid var(--line)}
+.slots.done .slot{background:var(--good);color:#fff;border-color:var(--good)}
+.letters{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.letters .tile{width:62px;min-height:62px;font-size:34px}
+.tile.used,.wtile.used{visibility:hidden}
+.hintme{animation:hintp 1s infinite}
+@keyframes hintp{0%,100%{box-shadow:0 4px 0 var(--tile-edge),0 0 0 0 color-mix(in srgb,var(--accent) 60%,transparent)}50%{box-shadow:0 4px 0 var(--tile-edge),0 0 0 8px transparent}}
+.sentence{display:flex;flex-wrap:wrap;gap:6px 8px;justify-content:center;min-height:48px;max-width:100%}
+.sw-slot{min-width:48px;height:42px;border-bottom:3px solid var(--line);display:grid;place-items:center;font:700 22px var(--read);padding:0 4px}
+.sw-slot.on{color:var(--en);border-color:var(--en)}
+.wtiles{display:flex;flex-wrap:wrap;gap:10px;justify-content:center}
+.wtile{background:var(--tile);border-radius:16px;box-shadow:0 4px 0 var(--tile-edge);font:700 22px var(--read);padding:12px 16px;transition:transform .08s}
+.wtile:active{transform:translateY(3px);box-shadow:0 1px 0 var(--tile-edge)}
+.chat{display:flex;align-items:center;gap:10px;justify-content:center}
+.who{font-size:56px;line-height:1}
+.bubble{background:var(--soft);border-radius:20px;padding:12px 14px;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+.opts.one{grid-template-columns:1fr}
+.opts.two{grid-template-columns:1fr 1fr}
+.tile.ans{font-family:var(--read);font-size:21px;min-height:64px;display:flex;gap:12px;align-items:center;justify-content:flex-start;padding:12px 16px;text-align:left}
+.tile.ans .kid{font-size:28px;flex:none}
+.scene{position:relative;width:240px;height:176px;max-width:100%}
+.scene .floor{position:absolute;left:0;right:0;bottom:6px;height:4px;background:var(--line);border-radius:2px}
+.sc-place,.sc-thing{position:absolute;transform:translateX(-50%);line-height:1;user-select:none}
+.sc-place{font-size:96px}
+.sc-thing{font-size:54px}
+.memo{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.mcard{aspect-ratio:1/1;min-width:0;border-radius:18px;background:var(--accent);box-shadow:0 5px 0 color-mix(in srgb,var(--accent) 60%,#000);display:grid;place-items:center;color:#fff;font:800 40px var(--display);transition:transform .15s}
+.mcard.up{background:var(--tile);color:var(--fg);box-shadow:0 5px 0 var(--tile-edge);animation:pop .3s}
+.mcard.got{background:color-mix(in srgb,var(--good) 28%,var(--tile))}
+.mpic{font-size:46px;line-height:1;display:grid;place-items:center}
+.mpic .sw{width:52px;height:52px}
+.mpic .num{font-size:46px}
+.mpic .nw{font-size:16px;padding:0 4px}
+.mword{font:700 19px var(--read);overflow-wrap:anywhere;padding:4px;text-align:center}
 @keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--good) 55%,transparent)}100%{box-shadow:0 0 0 26px transparent}}
 @media (prefers-reduced-motion: reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important;transition:none!important}}
 </style>
@@ -535,8 +572,9 @@ function fillVoiceSelect(){
   sel.disabled = !L.length;
 }
 if(HAS_TTS){ try{ pickVoice(); speechSynthesis.addEventListener('voiceschanged', pickVoice); }catch(e){} }
-function speakNow(t, queue, vol, rate){
-  if(!HAS_TTS) { ttsOK=false; return; }
+function speakNow(t, queue, vol, rate, onDone){
+  let fin=false; const doneOnce=()=>{ if(fin) return; fin=true; if(onDone) onDone(); };
+  if(!HAS_TTS) { ttsOK=false; setTimeout(doneOnce,10); return; }
   try{
     if(!queue && (speechSynthesis.speaking||speechSynthesis.pending)) speechSynthesis.cancel();
     speechSynthesis.resume();
@@ -544,17 +582,49 @@ function speakNow(t, queue, vol, rate){
     u.lang = VOICE ? VOICE.lang : 'en-GB'; if(VOICE) u.voice = VOICE;
     u.rate = rate || S.rate || .85; u.pitch = 1; u.volume = vol!=null ? vol : 1;
     keep.push(u); if(keep.length>8) keep.shift();
+    if(onDone){ u.onend=doneOnce; u.onerror=doneOnce; setTimeout(doneOnce, 2500+String(t).length*110); }
     if(vol==null){
       let started=false; u.onstart=()=>{ started=true; if(ttsOK!==true){ ttsOK=true; updateVoiceNote(); } };
       setTimeout(()=>{ if(!started && ttsOK!==true){ ttsOK=false; updateVoiceNote(); } }, 2500);
     }
     speechSynthesis.speak(u);
-  }catch(e){ ttsOK=false; updateVoiceNote(); }
+  }catch(e){ ttsOK=false; updateVoiceNote(); doneOnce(); }
 }
-function say(t, queue, slow){ if(S.sound) speakNow(t, queue, null, slow ? .6 : null); }
+// ---------- ferdig innleste stemmer (Azure) – nettleserstemmen brukes som reserve ----------
+// t = lærer (Sonia, britisk), k = barn (Maisie, britisk). Lydfilene lages av GitHub-jobben «Lag lydfiler».
+const VOICE_NAMES = {t:'Sonia', k:'Maisie'};
+const akey = (t,v='t') => v+'|'+String(t).trim().replace(/\s+/g,' ').toLowerCase();
+let CLIPS = null;
+try{ fetch('audio/manifest.json',{cache:'no-cache'}).then(r=>r.ok?r.json():null).then(m=>{ if(m&&m.clips&&Object.keys(m.clips).length){ CLIPS=m.clips; updateVoiceNote(); } }).catch(()=>{}); }catch(e){}
+const PLAYER = typeof Audio!=='undefined' ? new Audio() : null;
+let PQ=[], QBUSY=false, QGEN=0;
+function silentWav(){ const n=400, b=new Uint8Array(44+n), v=new DataView(b.buffer), w=(o,s)=>[...s].forEach((c,i)=>b[o+i]=c.charCodeAt(0));
+  w(0,'RIFF'); v.setUint32(4,36+n,true); w(8,'WAVE'); w(12,'fmt '); v.setUint32(16,16,true); v.setUint16(20,1,true); v.setUint16(22,1,true);
+  v.setUint32(24,8000,true); v.setUint32(28,8000,true); v.setUint16(32,1,true); v.setUint16(34,8,true); w(36,'data'); v.setUint32(40,n,true); b.fill(128,44);
+  let s=''; b.forEach(x=>s+=String.fromCharCode(x)); return 'data:audio/wav;base64,'+btoa(s); }
+let audioUnlocked=false;
+document.addEventListener('pointerdown', ()=>{ if(audioUnlocked||!PLAYER) return; audioUnlocked=true; try{ if(!QBUSY){ PLAYER.src=silentWav(); const p=PLAYER.play(); if(p&&p.catch) p.catch(()=>{}); } }catch(e){} }, {capture:true});
+function stopAll(){ QGEN++; PQ=[]; QBUSY=false; try{ if(PLAYER){ PLAYER.onended=null; PLAYER.onerror=null; PLAYER.pause(); } }catch(e){} try{ speechSynthesis.cancel(); }catch(e){} }
+function runQ(){
+  if(QBUSY) return; const n=PQ.shift(); if(!n) return; QBUSY=true; const gen=QGEN; let fired=false;
+  const done=()=>{ if(fired||gen!==QGEN) return; fired=true; QBUSY=false; runQ(); };
+  const tts=()=>{ if(gen!==QGEN) return; speakNow(n.text, true, null, n.slow?.6:null, done); };
+  if(n.url && PLAYER){
+    try{ PLAYER.onended=done; PLAYER.onerror=tts; PLAYER.src=n.url; PLAYER.playbackRate=n.rate; PLAYER.preservesPitch=true; PLAYER.webkitPreservesPitch=true;
+      const p=PLAYER.play(); if(p&&p.then) p.then(()=>{ if(ttsOK!==true){ ttsOK=true; updateVoiceNote(); } }).catch(tts); }catch(e){ tts(); }
+  } else tts();
+}
+function say(t, queue, slow, v='t'){
+  if(!S.sound || !t) return; if(!queue) stopAll();
+  const f = CLIPS && CLIPS[akey(t,v)];
+  PQ.push({text:t, slow:!!slow, url:f?'audio/'+f:null, rate: slow ? .72 : Math.max(.75,Math.min(1.25,(S.rate||.85)/.85))});
+  runQ();
+}
+
 let unlocked=false;
 document.addEventListener('pointerdown', ()=>{ if(unlocked||!HAS_TTS) return; unlocked=true; speakNow('.', true, 0); }, {capture:true});
 function voiceStatus(){
+  if(CLIPS) return `Naturlig stemme er lastet ned (${VOICE_NAMES.t} fra Microsoft, ${Object.keys(CLIPS).length} lydklipp). Velgeren under brukes bare til det som ikke har lydklipp.`;
   if(!HAS_TTS) return 'Denne appen eller nettleseren har ingen opplesing.';
   if(ttsOK===false) return 'Opplesingen kom ikke i gang her.';
   if(ttsOK===true) return VOICE ? `Stemmen virker (${VOICE.name}).` : 'Stemmen virker.';
@@ -562,7 +632,7 @@ function voiceStatus(){
 }
 function updateVoiceNote(){
   const n=document.getElementById('voicenote'); if(n) n.textContent=voiceStatus();
-  const b=document.getElementById('nospeech'); if(b) b.hidden = !(S.sound && (ttsOK===false));
+  const b=document.getElementById('nospeech'); if(b) b.hidden = !(S.sound && (ttsOK===false) && !CLIPS);
 }
 
 // ---------- mikrofon (talegjenkjenning) ----------
@@ -572,7 +642,7 @@ let micBlocked = !SRC, listening = false, REC = null, micErr = '';
 let listenGen = 0;
 function listen(onText, onFail, onPartial){
   if(!SRC){ micBlocked=true; onFail('none'); return; }
-  try{ speechSynthesis.cancel(); }catch(e){}
+  stopAll();
   const gen = ++listenGen, t0 = Date.now(), heard = [];
   let done=false, round=0;
   const fin = (f,x)=>{ if(done) return; done=true; if(gen===listenGen) listening=false; f(x); };
@@ -760,14 +830,26 @@ function renderHome(){
     <div class="row"><h2>Neste pakke</h2><small>${left} ${left===1?'stjerne':'stjerner'} igjen</small></div>
     <div class="meter" role="progressbar" aria-valuenow="${S.toNext}" aria-valuemax="${GIFT}"><b style="width:${pct}%"></b></div>
   </section>
-  <div class="label">Velg en lek</div>
+  <div class="mgroup"><div class="label">Lytte og forstå</div>
   <div class="modes">
     <button class="mode m1" data-act="play" data-m="finn"><span class="glyph">🐱 <small>cat</small></span><h3>Hør og finn</h3><p>Hør ordet på engelsk og finn bildet</p></button>
     <button class="mode m2" data-act="play" data-m="laerer"><span class="glyph">🧑‍🏫 ✋</span><h3>Hva sier læreren?</h3><p>Forstå beskjeder i klasserommet</p></button>
     <button class="mode m3" data-act="play" data-m="lytt"><span class="glyph">📖 <small>?</small></span><h3>Lytt og svar</h3><p>Hør en liten historie og svar på spørsmål</p></button>
-    <button class="mode m4" data-act="play" data-m="si"><span class="glyph">🎤 <small>red!</small></span><h3>Si det!</h3><p>Svar på engelsk med stemmen din</p></button>
-  </div>
-  <div class="label">Tema for «Hør og finn» og «Si det!»</div>
+    <button class="mode m4" data-act="play" data-m="rim"><span class="glyph">🐱 <small>🎩</small></span><h3>Rim</h3><p>Cat – hat! Finn ordet som rimer</p></button>
+  </div></div>
+  <div class="mgroup"><div class="label">Snakke</div>
+  <div class="modes">
+    <button class="mode m3" data-act="play" data-m="si"><span class="glyph">🎤 <small>red!</small></span><h3>Si det!</h3><p>Svar på engelsk med stemmen din</p></button>
+    <button class="mode m1" data-act="play" data-m="dialog"><span class="glyph">💬 <small>Hi!</small></span><h3>Spør og svar</h3><p>Hva svarer du når noen spør?</p></button>
+  </div></div>
+  <div class="mgroup"><div class="label">Lese og skrive</div>
+  <div class="modes">
+    <button class="mode m2" data-act="play" data-m="stav"><span class="glyph">c·a·t</span><h3>Stav ordet</h3><p>Hør ordet og bygg det med bokstaver</p></button>
+    <button class="mode m4" data-act="play" data-m="setning"><span class="glyph"><small>I · like · 🍎</small></span><h3>Lag setningen</h3><p>Sett ordene i riktig rekkefølge</p></button>
+    <button class="mode m1" data-act="play" data-m="hvor"><span class="glyph">🐱📦</span><h3>Hvor er katten?</h3><p>In, on, under eller next to?</p></button>
+    <button class="mode m3" data-act="play" data-m="vende"><span class="glyph">🃏 🃏</span><h3>Vendespill</h3><p>Finn bildet og ordet som hører sammen</p></button>
+  </div></div>
+  <div class="label">Tema for «Hør og finn», «Si det!», «Stav ordet» og «Vendespill»</div>
   <div class="levels">
     <button class="chip" data-act="topic" data-t="all" aria-pressed="${S.topic==='all'}">Alt blandet</button>
     ${TKEYS.map(k=>`<button class="chip" data-act="topic" data-t="${k}" aria-pressed="${S.topic===k}">${T[k].no}</button>`).join('')}
@@ -811,6 +893,7 @@ function choose(list, keyf){
 }
 const ALL_WORDS = TKEYS.flatMap(k=>T[k].items.map(it=>[k,it]));
 function newTask(){
+  const ex=newTaskExtra(); if(ex) return ex;
   if(G.mode==='finn' || G.mode==='si'){
     const [k,it] = S.topic==='all' ? choose(ALL_WORDS, x=>x[0]+':'+x[1][0]) : [S.topic, choose(T[S.topic].items, x=>S.topic+':'+x[0])];
     const key = k+':'+it[0], pool=T[k].items;
@@ -830,15 +913,180 @@ function newTask(){
 function markMiss(){ const t=G.task; if(!t||t.err) return; t.err=true; S.miss[t.key]=(S.miss[t.key]||0)+2; save(); }
 function markHit(){ const t=G.task; if(t && !t.err && S.miss[t.key]){ S.miss[t.key]--; if(S.miss[t.key]<=0) delete S.miss[t.key]; save(); } }
 function practised(){ return ALL_WORDS.filter(x=>S.seen[x[0]+':'+x[1][0]]).length; }
+// ================= NYE MODUSER (LK20 engelsk, mål etter 2. og 4. trinn) =================
+// Lag setningen: [engelsk, norsk, bilde]
+const SENT = [
+  ['I have a cat.','Jeg har en katt.','🐱'],['My name is Emma.','Jeg heter Emma.','👧'],['I am eight years old.','Jeg er åtte år.','🎂'],
+  ['I like apples.','Jeg liker epler.','🍎'],['The dog is big.','Hunden er stor.','🐶'],['It is sunny today.','Det er sol i dag.','☀️'],
+  ['Can I have a pencil, please?','Kan jeg få en blyant?','✏️'],['I can swim.','Jeg kan svømme.','🏊'],['She has a red bike.','Hun har en rød sykkel.','🚲'],
+  ['He is my brother.','Han er broren min.','👦'],['The cat is under the table.','Katten er under bordet.','🐱'],['We go to school.','Vi går på skolen.','🏫'],
+  ["I don't like fish.",'Jeg liker ikke fisk.','🐟'],['Open your book, please.','Åpne boka, er du snill.','📖'],['My favourite colour is blue.','Favorittfargen min er blå.','🔵'],
+  ['It is cold and windy.','Det er kaldt og vind.','💨'],['I have two sisters.','Jeg har to søstre.','👧'],['The bird can fly.','Fuglen kan fly.','🐦'],
+  ['Where is my bag?','Hvor er sekken min?','🎒'],['What is your name?','Hva heter du?','❓'],['How old are you?','Hvor gammel er du?','❓'],
+  ['I am happy today.','Jeg er glad i dag.','😊'],['Look at the board.','Se på tavla.','👀'],['The ball is in the box.','Ballen er i esken.','📦'],
+  ['I like to play football.','Jeg liker å spille fotball.','⚽'],['My mum is a teacher.','Mammaen min er lærer.','👩'],['It is my birthday today.','Det er bursdagen min i dag.','🎉'],
+  ['I want an ice cream.','Jeg vil ha en is.','🍦'],['The horse is brown.','Hesten er brun.','🐴'],['Can you help me, please?','Kan du hjelpe meg?','🙋'],
+  ['I live in Norway.','Jeg bor i Norge.','🏠'],['We have English on Monday.','Vi har engelsk på mandag.','📅'],['Thank you very much!','Tusen takk!','🙏'],
+  ['The frog is green.','Frosken er grønn.','🐸'],['I go to bed at eight.','Jeg legger meg klokka åtte.','🛏️'],['Do you have a pet?','Har du et kjæledyr?','🐾']
+];
+// Spør og svar: [spørsmål, svar, norsk spørsmål, norsk svar]
+const DIALOG = [
+  ['What is your name?','My name is Mia.','Hva heter du?','Jeg heter Mia.'],
+  ['How old are you?','I am eight years old.','Hvor gammel er du?','Jeg er åtte år.'],
+  ['How are you?',"I'm fine, thank you.",'Hvordan har du det?','Jeg har det bra, takk.'],
+  ['Where do you live?','I live in Oslo.','Hvor bor du?','Jeg bor i Oslo.'],
+  ['Do you like pizza?','Yes, I do!','Liker du pizza?','Ja, det gjør jeg!'],
+  ['Can you swim?','Yes, I can.','Kan du svømme?','Ja, det kan jeg.'],
+  ['Have you got a pet?','Yes, I have a dog.','Har du et kjæledyr?','Ja, jeg har en hund.'],
+  ['What colour is your bag?','It is pink.','Hvilken farge har sekken din?','Den er rosa.'],
+  ["What's the weather like?",'It is raining.','Hvordan er været?','Det regner.'],
+  ['What day is it today?','It is Monday.','Hvilken dag er det i dag?','Det er mandag.'],
+  ['What time is it?',"It's three o'clock.",'Hva er klokka?','Klokka er tre.'],
+  ['Who is this?','This is my mum.','Hvem er dette?','Dette er mammaen min.'],
+  ["What's your favourite animal?",'I like horses.','Hva er favorittdyret ditt?','Jeg liker hester.'],
+  ['How many pencils have you got?','I have got three.','Hvor mange blyanter har du?','Jeg har tre.'],
+  ['Where is the cat?',"It's under the chair.",'Hvor er katten?','Den er under stolen.'],
+  ['Thank you!',"You're welcome!",'Takk!','Vær så god!'],
+  ['Sorry!',"That's OK.",'Unnskyld!','Det går bra.'],
+  ['Happy birthday!','Thank you!','Gratulerer med dagen!','Takk!'],
+  ['Good morning, class!','Good morning, teacher!','God morgen, klasse!','God morgen, lærer!'],
+  ['Goodbye!','Bye! See you tomorrow!','Ha det!','Ha det! Vi ses i morgen!'],
+  ['Can I borrow your pen?','Yes, here you are.','Kan jeg låne pennen din?','Ja, vær så god.'],
+  ['Are you hungry?','Yes, I am.','Er du sulten?','Ja, det er jeg.'],
+  ['What do you want to eat?','A sandwich, please.','Hva vil du spise?','Et smørbrød, takk.'],
+  ['When is your birthday?','It is in May.','Når har du bursdag?','Den er i mai.'],
+  ['Have you got any brothers or sisters?','Yes, I have one brother.','Har du søsken?','Ja, jeg har én bror.']
+];
+// Hvor er …? (preposisjoner)
+const THINGS = [['cat','🐱'],['dog','🐶'],['ball','⚽'],['teddy','🧸'],['mouse','🐭']];
+const PLACES = [['box','📦',true],['bag','🎒',true],['basket','🧺',true],['bed','🛏️',false],['chair','🪑',false]];
+const PREPS = {in:'i', on:'på', under:'under', 'next to':'ved siden av'};
+// Rim: familier av ord som rimer
+const RHYMES = [
+  [['cat','🐱'],['hat','🎩'],['bat','🦇'],['rat','🐀']],[['dog','🐶'],['frog','🐸'],['log','🪵']],[['bee','🐝'],['tree','🌳'],['sea','🌊'],['three','3']],
+  [['sun','☀️'],['bun','🍞'],['run','🏃']],[['pen','🖊️'],['ten','10'],['hen','🐔']],[['box','📦'],['fox','🦊'],['socks','🧦']],
+  [['cake','🎂'],['snake','🐍'],['lake','🏞️']],[['ball','⚽'],['wall','🧱'],['tall','🦒']],[['star','⭐'],['car','🚗'],['jar','🫙']],
+  [['bed','🛏️'],['red','🔴'],['head','🗣️']],[['fish','🐟'],['dish','🍽️'],['wish','🌠']],[['goat','🐐'],['boat','⛵'],['coat','🧥']],
+  [['mouse','🐭'],['house','🏠']],[['moon','🌙'],['spoon','🥄']],[['king','🤴'],['ring','💍'],['sing','🎤']],[['kite','🪁'],['white','⚪'],['light','💡']],
+  [['bear','🐻'],['chair','🪑'],['pear','🍐']],[['clock','🕒'],['rock','🪨'],['sock','🧦']],[['train','🚆'],['rain','🌧️']],[['nose','👃'],['rose','🌹'],['toes','🦶']]
+];
+const SPELL = ALL_WORDS.filter(([k,it])=>/^[a-z]{3,7}$/.test(word(it)) && !/^[~#]/.test(it[1]) && !/^\d+$/.test(it[1]));
+const MEMO_TOPICS = TKEYS.filter(k=>T[k].items.length>=6);
+const MODES = {
+  finn:'Hør og finn', laerer:'Hva sier læreren?', lytt:'Lytt og svar', rim:'Rim', si:'Si det!', dialog:'Spør og svar',
+  stav:'Stav ordet', setning:'Lag setningen', hvor:'Hvor er …?', vende:'Vendespill'
+};
+
+function newTaskExtra(){
+  if(G.mode==='stav'){ const [k,it]=choose(SPELL, x=>'stav:'+word(x[1])); const w=word(it);
+    const extra=shuffle('abcdefghiklmnoprstuwy'.split('').filter(c=>!w.includes(c))).slice(0,w.length<=4?2:3);
+    return {key:'stav:'+w, k, it, w, pos:0, miss:0, tiles:shuffle([...w.split(''),...extra]), usedT:[]}; }
+  if(G.mode==='setning'){ const s=choose(SENT, x=>'sent:'+x[0]), words=s[0].split(' ');
+    return {key:'sent:'+s[0], s, words, pos:0, miss:0, tiles:shuffle(words.map((w,i)=>({w,i}))), usedT:[], showNo:false}; }
+  if(G.mode==='dialog'){ const d=choose(DIALOG, x=>'dlg:'+x[0]); const others=shuffle(DIALOG.filter(x=>x!==d && x[1]!==d[1])).slice(0,2).map(x=>x[1]);
+    return {key:'dlg:'+d[0], d, opts:shuffle([d[1],...others]), showQ:false}; }
+  if(G.mode==='hvor'){ let th,pl,pr,key;
+    for(let n=0;n<20;n++){ th=pick(THINGS); pl=pick(PLACES); const ok=Object.keys(PREPS).filter(p=>p!=='in'||pl[2]); pr=pick(ok); key=`hvor:${th[0]}:${pr}:${pl[0]}`; if(!G.used.has(key)) break; }
+    G.used.add(key); const opts=Object.keys(PREPS).filter(p=>p!=='in'||pl[2]);
+    return {key, th, pl, prep:pr, opts:shuffle(opts), q:`Where is the ${th[0]}?`, a:`The ${th[0]} is ${pr} the ${pl[0]}.`}; }
+  if(G.mode==='rim'){ const fam=choose(RHYMES, x=>'rim:'+x[0][0]); const [target,match]=shuffle(fam).slice(0,2);
+    const others=shuffle(RHYMES.filter(f=>f!==fam)).slice(0,2).map(f=>pick(f));
+    return {key:'rim:'+target[0], target, match, opts:shuffle([match,...others]), q:`Which word rhymes with ${target[0]}?`}; }
+  return null;
+}
+function speakExtra(slow){
+  const t=G.task;
+  if(G.mode==='stav') say(t.w,false,slow);
+  else if(G.mode==='setning') say(t.s[0],false,slow);
+  else if(G.mode==='dialog') say(t.d[0],false,slow);
+  else if(G.mode==='hvor') say(t.q,false,slow);
+  else if(G.mode==='rim') say(t.q,false,slow);
+  else return false; return true;
+}
+function sceneHTML(t){
+  const P=t.pl[1], H=t.th[1], p=t.prep;
+  const pos = { on:`<span class="sc-place" style="left:50%;bottom:8px">${P}</span><span class="sc-thing" style="left:50%;bottom:${t.pl[0]==='bed'?72:86}px">${H}</span>`,
+    under:`<span class="sc-place" style="left:50%;bottom:64px">${P}</span><span class="sc-thing" style="left:50%;bottom:6px;font-size:48px">${H}</span>`,
+    in:`<span class="sc-thing" style="left:50%;bottom:66px;font-size:46px">${H}</span><span class="sc-place" style="left:50%;bottom:8px">${P}</span>`,
+    'next to':`<span class="sc-place" style="left:36%;bottom:8px">${P}</span><span class="sc-thing" style="left:74%;bottom:10px">${H}</span>` }[p];
+  return `<div class="scene" role="img" aria-label="${esc(t.a)}"><span class="floor"></span>${pos}</div>`;
+}
+function renderExtra(){
+  const t=G.task;
+  if(G.mode==='stav') return `<div class="stage"><div class="pic">${picHTML(t.it[1])}</div>${hearRow(false)}
+      <div class="slots" id="slots">${t.w.split('').map((_,i)=>`<div class="slot">${i<t.pos?t.w[i]:''}</div>`).join('')}</div>
+      <p class="qno">Hør ordet og trykk på bokstavene i riktig rekkefølge.</p><p class="fb" id="fb"></p></div>
+    <div class="letters">${t.tiles.map((l,i)=>`<button class="tile${t.usedT.includes(i)?' used':''}${t.miss>=3&&!t.usedT.includes(i)&&l===t.w[t.pos]&&t.tiles.findIndex((x,j)=>x===l&&!t.usedT.includes(j))===i?' hintme':''}" data-act="ltile" data-i="${i}">${l}</button>`).join('')}</div>`;
+  if(G.mode==='setning') return `<div class="stage"><div class="pic" style="font-size:64px;min-height:70px">${t.s[2]}</div>${hearRow(false)}
+      <p class="ask" style="font-size:19px">${esc(t.s[1])}</p>
+      <div class="sentence" id="sent">${t.words.map((w,i)=>`<span class="sw-slot${i<t.pos?' on':''}">${i<t.pos?esc(w):''}</span>`).join('')}</div>
+      <p class="qno">Trykk på ordene i riktig rekkefølge.</p><p class="fb" id="fb"></p></div>
+    <div class="wtiles">${t.tiles.map((o,i)=>`<button class="wtile${t.usedT.includes(i)?' used':''}${t.miss>=3&&!t.usedT.includes(i)&&o.w===t.words[t.pos]&&t.tiles.findIndex((x,j)=>x.w===o.w&&!t.usedT.includes(j))===i?' hintme':''}" data-act="wtile" data-i="${i}">${esc(o.w)}</button>`).join('')}</div>`;
+  if(G.mode==='dialog') return `<div class="stage"><div class="chat"><span class="who">🧑‍🏫</span><div class="bubble">${hearRow(false)}${t.showQ?`<p class="eng">${esc(t.d[0])}</p><p class="qno">${esc(t.d[2])}</p>`:''}</div></div>
+      <button class="btn small soft" data-act="dq">${t.showQ?'Skjul spørsmålet':'Vis spørsmålet'}</button>
+      <p class="ask" style="font-size:19px">Hva svarer du?</p><p class="fb" id="fb"></p></div>
+    <div class="opts one">${t.opts.map(o=>`<button class="tile ans" data-act="pick" data-v="${esc(o)}"><span class="kid">🙋</span><span>${esc(o)}</span></button>`).join('')}</div>`;
+  if(G.mode==='hvor') return `<div class="stage">${sceneHTML(t)}<p class="eng">${esc(t.q)}</p>${hearRow(false)}<p class="fb" id="fb"></p></div>
+    <div class="opts ${t.opts.length===4?'four':'three'}">${t.opts.map(p=>`<button class="tile lab" data-act="pick" data-v="${esc(p)}"><span class="t big">${esc(p)} the ${t.pl[0]}</span><span class="t">${PREPS[p]}</span></button>`).join('')}</div>`;
+  if(G.mode==='rim') return `<div class="stage"><div class="pic">${picHTML(t.target[1])}</div><p class="eng" style="font-size:30px">${esc(t.target[0])}</p>
+      <p class="ask" style="font-size:19px">Hvilket ord rimer på «${esc(t.target[0])}»?</p>${hearRow(false)}<p class="fb" id="fb"></p></div>
+    <div class="opts three">${t.opts.map(o=>`<button class="tile lab" data-act="pick" data-v="${esc(o[0])}" data-say="${esc(o[0])}"><span>${picHTML(o[1])}</span><span class="t big">${esc(o[0])}</span></button>`).join('')}</div>`;
+  return null;
+}
+function correctExtra(){
+  const t=G.task;
+  if(G.mode==='stav'){ say(t.w); setFb(`${esc(t.w)} <span class="no">= ${esc(t.it[2])}</span>`); return 1700; }
+  if(G.mode==='setning'){ say(t.s[0]); setFb(`${esc(t.s[0])} <span class="no">= ${esc(t.s[1])}</span>`); return 2400; }
+  if(G.mode==='dialog'){ say(t.d[1],false,false,'k'); setFb(`${esc(t.d[1])} <span class="no">= ${esc(t.d[3])}</span>`); return 2400; }
+  if(G.mode==='hvor'){ say(t.a); setFb(`${esc(t.a)}`); return 2200; }
+  if(G.mode==='rim'){ say(t.target[0]); say(t.match[0],true); setFb(`${esc(t.target[0])} – ${esc(t.match[0])}`); return 1900; }
+  return null;
+}
+function answerOK(v){ const t=G.task;
+  if(G.mode==='dialog') return v===t.d[1];
+  if(G.mode==='hvor') return v===t.prep;
+  if(G.mode==='rim') return v===t.match[0];
+  return null; }
+function adultAnswer(){ const t=G.task;
+  return {stav:()=>t.w, setning:()=>t.s[0], dialog:()=>`${t.d[0]} → ${t.d[1]}`, hvor:()=>t.a, rim:()=>`${t.target[0]} – ${t.match[0]}`}[G.mode]?.() ?? ''; }
+
+// ---------- vendespill ----------
+function startMemory(){
+  const k = (S.topic!=='all' && MEMO_TOPICS.includes(S.topic)) ? S.topic : pick(MEMO_TOPICS);
+  const items = shuffle(T[k].items).slice(0,6);
+  const cards = shuffle(items.flatMap((it,p)=>[{p,kind:'pic',it},{p,kind:'word',it}]));
+  G = {mode:'vende', i:0, earned:0, mistakes:0, used:new Set(), busy:false, k, cards, open:[], done:new Set(), misses:0, task:{key:'vende:'+k}};
+  view='game'; render(); say('Find the pairs!');
+}
+function renderMemory(){
+  const dots = Array.from({length:ROUND},(_,i)=>`<i class="${i<G.done.size/2?'done':i===G.done.size/2?'now':''}"></i>`).join('');
+  app.innerHTML = `<div class="bar"><button class="icon-btn" data-act="home" aria-label="Hjem">${ICON.home}</button><div class="dots">${dots}</div>${starPill()}</div>
+  <div class="stage" style="padding-block:14px"><p class="ask" style="font-size:19px">Finn bildet og ordet som hører sammen</p><p class="qno">Tema: ${esc(T[G.k].no)} · Bom: ${G.misses} <span class="no">(6 bom er gratis)</span></p></div>
+  <div class="memo">${G.cards.map((c,i)=>{ const up=G.open.includes(i)||G.done.has(i);
+    return `<button class="mcard${up?' up':''}${G.done.has(i)?' got':''}" data-act="mcard" data-i="${i}" aria-label="${up?esc(c.kind==='word'?word(c.it):'bilde'):'Skjult kort'}">${up?(c.kind==='pic'?`<span class="mpic">${picHTML(c.it[1])}</span>`:`<span class="mword">${esc(word(c.it))}</span>`):'<span class="mback">?</span>'}</button>`; }).join('')}</div>`;
+}
+function flipCard(i){
+  if(G.busy || G.open.includes(i) || G.done.has(i)) return;
+  const c=G.cards[i]; G.open.push(i); sfx.tap(); if(c.kind==='word') say(word(c.it));
+  if(G.open.length===2){ const [a,b]=G.open.map(x=>G.cards[x]);
+    if(a.p===b.p){ G.open.forEach(x=>G.done.add(x)); G.open=[]; renderMemory(); setTimeout(()=>{ sfx.ok(); say(word(a.it)); },350);
+      if(G.done.size===G.cards.length){ G.busy=true; G.earned=Math.max(0,ROUND-Math.max(0,G.misses-6)); if(G.earned) addStars(G.earned); setTimeout(finishRound,1400); }
+      return; }
+    G.misses++; G.mistakes++; G.busy=true; renderMemory(); setTimeout(()=>{ sfx.no(); },300); setTimeout(()=>{ G.open=[]; G.busy=false; renderMemory(); },1100); return; }
+  renderMemory();
+}
+
 function speakTask(slow){
   const t=G.task; if(!t) return;
+  if(speakExtra(slow)) return;
   if(G.mode==='finn') say(word(t.it), false, slow);
   else if(G.mode==='laerer') say(t.it[0], false, slow);
   else if(G.mode==='si') say(T[t.k].q, false, slow);
   else { const q=t.st.qs[t.qi][0]; if(t.fresh){ say(t.st.en,false,slow); say(q,true,slow); t.fresh=false; } else say(q,false,slow); }
 }
 function startGame(m){
-  stopListen();
+  stopListen(); stopAll();
+  if(m==='vende') return startMemory();
   G = {mode:m, i:0, earned:0, mistakes:0, used:new Set(), busy:false, stories:[]};
   G.task = newTask(); view='game'; render(); setTimeout(()=>speakTask(),300);
 }
@@ -846,10 +1094,13 @@ function startGame(m){
 function hearRow(big){ return `<div class="hear"><button class="speak${big?'':' sm'}" data-act="replay" aria-label="Hør igjen">${ICON.speak}</button><button class="slow" data-act="slow" aria-label="Hør sakte">🐢</button></div>`; }
 
 function renderGame(){
+  if(G.mode==='vende') return renderMemory();
   const t = G.task;
   const dots = Array.from({length:ROUND},(_,i)=>`<i class="${i<G.i?'done':i===G.i?'now':''}"></i>`).join('');
   let body = '', ans = '';
-  if(G.mode==='finn'){
+  const xb = renderExtra();
+  if(xb!==null){ body = xb; ans = adultAnswer(); }
+  else if(G.mode==='finn'){
     ans = `${word(t.it)} (${t.it[2]})`;
     body = `<div class="stage"><p class="ask">Hvilket bilde hører du?</p>${hearRow(true)}<p class="fb" id="fb"></p></div>
       <div class="opts four">${t.opts.map(o=>`<button class="tile" data-act="pick" data-v="${esc(o[0])}" aria-label="${esc(word(o))}">${picHTML(o[1])}</button>`).join('')}</div>`;
@@ -896,7 +1147,7 @@ function renderGame(){
       <p class="fb" id="fb"></p>
     </div>`;
   }
-  const helper = `<div class="nospeech" id="nospeech" ${S.sound&&ttsOK===false?'':'hidden'}><p>Opplesingen virker ikke i denne appen. Åpne lenken i Safari, Chrome eller Edge, eller la en voksen lese høyt.</p><button class="btn small" data-act="adult">Voksen: vis hva som skal sies</button><p id="adultans" class="adultans" hidden>${esc(ans)}</p></div>`;
+  const helper = `<div class="nospeech" id="nospeech" ${S.sound&&ttsOK===false&&!CLIPS?'':'hidden'}><p>Opplesingen virker ikke i denne appen. Åpne lenken i Safari, Chrome eller Edge, eller la en voksen lese høyt.</p><button class="btn small" data-act="adult">Voksen: vis hva som skal sies</button><p id="adultans" class="adultans" hidden>${esc(ans)}</p></div>`;
   app.innerHTML = `<div class="bar"><button class="icon-btn" data-act="home" aria-label="Hjem">${ICON.home}</button><div class="dots">${dots}</div>${starPill()}</div>${helper}${body}`;
 }
 
@@ -911,7 +1162,9 @@ function correct(el){
   G.busy = true; sfx.ok();
   const t = G.task, star = !t.err; let wait = 1700;
   if(star){ addStars(1, el); G.earned++; } markHit();
-  if(G.mode==='finn' || G.mode==='si'){ say(word(t.it)); setFb(`${esc(word(t.it))} <span class="no">= ${esc(t.it[2])}</span>`); }
+  const xw=correctExtra();
+  if(xw!==null) wait=xw;
+  else if(G.mode==='finn' || G.mode==='si'){ say(word(t.it)); setFb(`${esc(word(t.it))} <span class="no">= ${esc(t.it[2])}</span>`); }
   else if(G.mode==='laerer'){ say(t.it[0]); setFb(`${esc(t.it[0])} <span class="no">= ${esc(t.it[2])}</span>`); wait = 2300; }
   else { const q=t.st.qs[t.qi]; say(q[2][q[3]][1]); setFb(`${esc(q[2][q[3]][1])}`); }
   if(star) say(pick(PRAISE), true);
@@ -1030,7 +1283,7 @@ app.addEventListener('change', e=>{
 app.addEventListener('click', e=>{
   const b = e.target.closest('[data-act]'); if(!b) return;
   const act = b.dataset.act;
-  if(act==='home'){ stopListen(); try{speechSynthesis.cancel()}catch(x){} confirmReset=false; view='home'; render(); }
+  if(act==='home'){ stopListen(); stopAll(); confirmReset=false; view='home'; render(); }
   else if(act==='play'){ sfx.tap(); startGame(b.dataset.m); }
   else if(act==='topic'){ S.topic=b.dataset.t; save(); sfx.tap(); renderHome(); }
   else if(act==='rate'){ S.rate=+b.dataset.r; save(); renderHome(); say('Hello! How are you?'); }
@@ -1056,7 +1309,7 @@ app.addEventListener('click', e=>{
     say(['one','two','three'][giftTaps-1]||'');
     if(giftTaps>=3) setTimeout(openGift,450);
   }
-  else if(act==='squish'){ const d=SQ[+b.dataset.id]; bump(b.querySelector('svg')||b); sfx.squish(); say(d.n+'. It is '+d.cw[0]+'.'); }
+  else if(act==='squish'){ const d=SQ[+b.dataset.id]; bump(b.querySelector('svg')||b); sfx.squish(); say(d.n); say('It is '+d.cw[0]+'.', true); }
   else if(view==='game' && G){
     const t = G.task;
     if(act==='story'){ say(t.st.en); }
@@ -1064,18 +1317,41 @@ app.addEventListener('click', e=>{
     else if(act==='qn'){ t.showQn=!t.showQn; renderGame(); }
     else if(act==='text'){ t.showText=!t.showText; if(!t.showText) t.showNo=false; renderGame(); }
     else if(act==='textno'){ t.showNo=!t.showNo; renderGame(); }
+    else if(act==='dq'){ t.showQ=!t.showQ; renderGame(); }
+    else if(act==='mcard'){ flipCard(+b.dataset.i); }
     else if(G.busy) return;
+    else if(act==='ltile'||act==='wtile'){
+      const i=+b.dataset.i; if(t.usedT.includes(i)) return;
+      const isL=act==='ltile', want=isL?t.w[t.pos]:t.words[t.pos], got=isL?t.tiles[i]:t.tiles[i].w, len=isL?t.w.length:t.words.length;
+      if(got===want){ t.usedT.push(i); t.pos++; sfx.tap(); renderGame();
+        if(t.pos===len){ const box=document.getElementById(isL?'slots':'sent'); if(box) box.classList.add('done'); correct(box); } }
+      else { t.miss++; G.mistakes++; markMiss(); sfx.no(); b.style.animation='shake .4s'; setTimeout(()=>{ b.style.animation=''; if(t.miss===3) renderGame(); },400);
+        if(t.miss===2) say(isL?t.w:t.s[0]); } }
     else if(act==='mic'){ doListen(); }
     else if(act==='hint'){ markMiss(); t.hint=true; renderGame(); say(word(t.it)); }
     else if(act==='selfok'){ correct(b); }
     else if(act==='skip'){ G.mistakes++; markMiss(); G.busy=true; stopListen(); nextTask(); }
     else if(act==='pick'){
-      const ok = G.mode==='lytt' ? +b.dataset.v===t.st.qs[t.qi][3] : b.dataset.v===t.it[0];
+      const xo = answerOK(b.dataset.v);
+      const ok = xo!==null ? xo : G.mode==='lytt' ? +b.dataset.v===t.st.qs[t.qi][3] : b.dataset.v===t.it[0];
       if(ok){ b.classList.add('ok'); document.querySelectorAll('[data-act=pick]').forEach(x=>x.disabled=true); correct(b); }
       else { wrong(b); setTimeout(()=>speakTask(),350); }
     }
   }
 });
+
+function allSpeech(){
+  const L=[], add=(t,v='t')=>{ if(t) L.push({text:String(t).trim(),v}); };
+  TKEYS.forEach(k=>{ add(T[k].q); T[k].items.forEach(it=>add(word(it))); });
+  CLASS.forEach(c=>add(c[0]));
+  STORIES.forEach(st=>{ add(st.en); st.qs.forEach(q=>{ add(q[0]); q[2].forEach(o=>add(o[1])); }); });
+  PRAISE.forEach(x=>add(x)); ['Yes!','Perfect round!','Well done!',"Good try! Let's practise more.",'one','two','three','Hello! How are you?','Find the pairs!'].forEach(x=>add(x));
+  SQ.forEach(d=>{ add(d.n); add('You got '+d.n+'!'); add('It is '+d.cw[0]+'.'); });
+  SENT.forEach(x=>add(x[0])); DIALOG.forEach(d=>{ add(d[0]); add(d[1],'k'); });
+  THINGS.forEach(th=>{ add(`Where is the ${th[0]}?`); PLACES.forEach(pl=>Object.keys(PREPS).filter(p=>p!=='in'||pl[2]).forEach(p=>add(`The ${th[0]} is ${p} the ${pl[0]}.`))); });
+  RHYMES.forEach(f=>f.forEach(w=>{ add(w[0]); add(`Which word rhymes with ${w[0]}?`); }));
+  const seen=new Set(); return L.filter(x=>{ const k=akey(x.text,x.v); if(seen.has(k)) return false; seen.add(k); return true; });
+}
 
 render();
 </script>

@@ -1,0 +1,45 @@
+name: Lag lydfiler
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['audio/texts.json', 'tools/tts.mjs']
+
+permissions:
+  contents: write
+  pages: write
+
+concurrency:
+  group: lydfiler
+  cancel-in-progress: false
+
+jobs:
+  lydfiler:
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Lag lydfiler med Azure
+        env:
+          AZURE_SPEECH_KEY: ${{ secrets.AZURE_SPEECH_KEY }}
+          AZURE_SPEECH_REGION: ${{ secrets.AZURE_SPEECH_REGION }}
+        run: node tools/tts.mjs
+      - name: Lagre lydfilene i repoet
+        if: always()
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898341+github-actions[bot]@users.noreply.github.com"
+          git add audio
+          if git diff --cached --quiet; then echo "Ingen nye lydfiler."; exit 0; fi
+          git commit -m "Nye lydfiler fra Azure"
+          git pull --rebase origin main
+          git push
+      - name: Oppdater nettsiden
+        if: always()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X POST "repos/${{ github.repository }}/pages/builds" || true
