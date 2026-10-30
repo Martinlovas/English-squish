@@ -838,7 +838,7 @@ function renderHome(){
     <button class="mode m1" data-act="play" data-m="finn"><span class="glyph">🐱 <small>cat</small></span><h3>Hør og finn</h3><p>Hør ordet på engelsk og finn bildet</p></button>
     <button class="mode m2" data-act="play" data-m="laerer"><span class="glyph">🧑‍🏫 ✋</span><h3>Hva sier læreren?</h3><p>Forstå beskjeder i klasserommet</p></button>
     <button class="mode m3" data-act="play" data-m="lytt"><span class="glyph">📖 <small>?</small></span><h3>Lytt og svar</h3><p>Hør en liten historie og svar på spørsmål</p></button>
-    <button class="mode m4" data-act="play" data-m="rim"><span class="glyph">🐱 <small>🎩</small></span><h3>Rim</h3><p>Cat – hat! Finn ordet som rimer</p></button>
+    <button class="mode m4" data-act="play" data-m="rim"><span class="glyph">🐱 <small>🎩</small></span><h3>Rim</h3><p>Hva rimer? Si det eller trykk på bildet</p></button>
   </div></div>
   <div class="mgroup"><div class="label">Snakke</div>
   <div class="modes">
@@ -965,13 +965,13 @@ const THINGS = [['cat','🐱'],['dog','🐶'],['ball','⚽'],['teddy','🧸'],['
 const PLACES = [['box','📦',true],['bag','🎒',true],['basket','🧺',true],['bed','🛏️',false],['chair','🪑',false]];
 const PREPS = {in:'i', on:'på', under:'under', 'next to':'ved siden av'};
 // Rim: familier av ord som rimer
-const RHYMES = [
-  [['cat','🐱'],['hat','🎩'],['bat','🦇'],['rat','🐀']],[['dog','🐶'],['frog','🐸'],['log','🪵']],[['bee','🐝'],['tree','🌳'],['sea','🌊'],['three','3']],
-  [['sun','☀️'],['bun','🍞'],['run','🏃']],[['pen','🖊️'],['ten','10'],['hen','🐔']],[['box','📦'],['fox','🦊'],['socks','🧦']],
-  [['cake','🎂'],['snake','🐍'],['lake','🏞️']],[['ball','⚽'],['wall','🧱'],['tall','🦒']],[['star','⭐'],['car','🚗'],['jar','🫙']],
-  [['bed','🛏️'],['red','🔴'],['head','🗣️']],[['fish','🐟'],['dish','🍽️'],['wish','🌠']],[['goat','🐐'],['boat','⛵'],['coat','🧥']],
-  [['mouse','🐭'],['house','🏠']],[['moon','🌙'],['spoon','🥄']],[['king','🤴'],['ring','💍'],['sing','🎤']],[['kite','🪁'],['white','⚪'],['light','💡']],
-  [['bear','🐻'],['chair','🪑'],['pear','🍐']],[['clock','🕒'],['rock','🪨'],['sock','🧦']],[['train','🚆'],['rain','🌧️']],[['nose','👃'],['rose','🌹'],['toes','🦶']]
+const RHYMES = [   // bare ord med tydelige bilder, siden Rim nå er uten tekst
+  [['cat','🐱'],['hat','🎩'],['rat','🐀']],[['dog','🐶'],['frog','🐸']],[['bee','🐝'],['tree','🌳'],['key','🔑']],
+  [['cake','🎂'],['snake','🐍']],[['star','⭐'],['car','🚗']],[['goat','🐐'],['boat','⛵'],['coat','🧥']],[['mouse','🐭'],['house','🏠']],
+  [['moon','🌙'],['spoon','🥄']],[['bear','🐻'],['chair','🪑'],['pear','🍐']],[['clock','🕒'],['sock','🧦'],['lock','🔒']],
+  [['train','🚆'],['rain','🌧️']],[['nose','👃'],['rose','🌹']],[['pen','🖊️'],['ten','10']],[['box','📦'],['fox','🦊']],
+  [['sun','☀️'],['one','1']],[['bed','🛏️'],['red','🔴']],[['bell','🔔'],['shell','🐚']],[['shoe','👟'],['two','2']],
+  [['four','4'],['door','🚪']],[['snail','🐌'],['whale','🐳']],[['duck','🦆'],['truck','🚚']]
 ];
 const SPELL = ALL_WORDS.filter(([k,it])=>/^[a-z]{3,7}$/.test(word(it)) && !/^[~#]/.test(it[1]) && !/^\d+$/.test(it[1]));
 const MEMO_TOPICS = TKEYS.filter(k=>T[k].items.length>=6);
@@ -994,7 +994,7 @@ function newTaskExtra(){
     return {key, th, pl, prep:pr, opts:shuffle(opts), q:`Where is the ${th[0]}?`, a:`The ${th[0]} is ${pr} the ${pl[0]}.`}; }
   if(G.mode==='rim'){ const fam=choose(RHYMES, x=>'rim:'+x[0][0]); const [target,match]=shuffle(fam).slice(0,2);
     const others=shuffle(RHYMES.filter(f=>f!==fam)).slice(0,2).map(f=>pick(f));
-    return {key:'rim:'+target[0], target, match, opts:shuffle([match,...others]), q:`Which word rhymes with ${target[0]}?`}; }
+    return {key:'rim:'+target[0], target, match, it:[match[0],match[1],''], opts:shuffle([match,...others]), q:`What rhymes with ${target[0]}?`, tries:0, heard:'', hint:false}; }
   return null;
 }
 function speakExtra(slow){
@@ -1031,9 +1031,13 @@ function renderExtra(){
     <div class="opts one">${t.opts.map(o=>`<button class="tile ans" data-act="pick" data-v="${esc(o)}"><span class="kid">🙋</span><span>${esc(o)}</span></button>`).join('')}</div>`;
   if(G.mode==='hvor') return `<div class="stage">${sceneHTML(t)}<p class="eng">${esc(t.q)}</p>${hearRow(false)}<p class="fb" id="fb"></p></div>
     <div class="opts ${t.opts.length===4?'four':'three'}">${t.opts.map(p=>`<button class="tile lab" data-act="pick" data-v="${esc(p)}"><span class="t big">${esc(p)} the ${t.pl[0]}</span><span class="t">${PREPS[p]}</span></button>`).join('')}</div>`;
-  if(G.mode==='rim') return `<div class="stage"><div class="pic">${picHTML(t.target[1])}</div><p class="eng" style="font-size:30px">${esc(t.target[0])}</p>
-      <p class="ask" style="font-size:19px">Hvilket ord rimer på «${esc(t.target[0])}»?</p>${hearRow(false)}<p class="fb" id="fb"></p></div>
-    <div class="opts three">${t.opts.map(o=>`<button class="tile lab" data-act="pick" data-v="${esc(o[0])}" data-say="${esc(o[0])}"><span>${picHTML(o[1])}</span><span class="t big">${esc(o[0])}</span></button>`).join('')}</div>`;
+  if(G.mode==='rim'){ const can = SRC && !micBlocked;
+    return `<div class="stage"><div class="pic">${picHTML(t.target[1])}</div>
+      <p class="ask" style="font-size:19px">Hva rimer? Lytt, og si eller trykk på bildet.</p>${hearRow(false)}
+      ${can?`<button class="mic${listening?' on':''}" id="micbtn" data-act="mic" aria-label="Trykk og si ordet">${ICON.mic}</button>
+        <p class="status" id="status">${t.heard||'Trykk på mikrofonen og si ordet som rimer, eller trykk på bildet.'}</p>`:''}
+      <p class="fb" id="fb"></p></div>
+    <div class="opts three">${t.opts.map((o,i)=>`<button class="tile emoji" data-act="pick" data-v="${esc(o[0])}" aria-label="Bilde ${i+1}">${picHTML(o[1])}</button>`).join('')}</div>`; }
   return null;
 }
 function correctExtra(){
@@ -1042,7 +1046,7 @@ function correctExtra(){
   if(G.mode==='setning'){ say(t.s[0]); setFb(`${esc(t.s[0])} <span class="no">= ${esc(t.s[1])}</span>`); return 2400; }
   if(G.mode==='dialog'){ say(t.d[1],false,false,'k'); setFb(`${esc(t.d[1])} <span class="no">= ${esc(t.d[3])}</span>`); return 2400; }
   if(G.mode==='hvor'){ say(t.a); setFb(`${esc(t.a)}`); return 2200; }
-  if(G.mode==='rim'){ say(t.target[0]); say(t.match[0],true); setFb(`${esc(t.target[0])} – ${esc(t.match[0])}`); return 1900; }
+  if(G.mode==='rim'){ say(t.match[0]); setFb(`${esc(t.target[0])} – ${esc(t.match[0])}`); return 2000; }
   return null;
 }
 function answerOK(v){ const t=G.task;
@@ -1185,7 +1189,8 @@ function doListen(){
     if(G.task!==t || view!=='game') return;
     alts = [...alts].reverse();
     const said = esc(alts[0]||'');
-    if(heardIt(alts, t.it, T[t.k].items)){ t.heard = `Jeg hørte: <b>«${said}»</b>`; renderGame(); correct(document.getElementById('micbtn')); }
+    const pool = G.mode==='rim' ? [...t.opts,t.target].map(o=>[o[0],o[1],'']) : T[t.k].items;
+    if(heardIt(alts, t.it, pool)){ t.heard = `Jeg hørte: <b>«${said}»</b>`; renderGame(); correct(document.getElementById('micbtn')); }
     else { t.tries++; sfx.no();
       if(t.tries>=5){ markMiss(); t.hint=true; say(word(t.it));
         t.heard = `Jeg hørte: <b>«${said}»</b>. Fem forsøk – ingen stjerne denne gangen. Hør ordet, si det gjerne igjen, eller trykk «Neste».`; }
@@ -1197,7 +1202,7 @@ function doListen(){
     if(BLOCK_ERR.includes(err)){ micBlocked=true; toast('Mikrofonen er ikke tillatt her. Bruk «Jeg sa det!»'); }
     else t.heard = 'Jeg hørte ingenting. Trykk og prøv igjen, og si gjerne hele setningen.';
     renderGame();
-  }, partial=>heardIt(partial, t.it, T[t.k].items));
+  }, partial=>heardIt(partial, t.it, G.mode==='rim' ? [...t.opts,t.target].map(o=>[o[0],o[1],'']) : T[t.k].items));
 }
 
 function finishRound(){
@@ -1338,7 +1343,7 @@ app.addEventListener('click', e=>{
       const xo = answerOK(b.dataset.v);
       const ok = xo!==null ? xo : G.mode==='lytt' ? +b.dataset.v===t.st.qs[t.qi][3] : b.dataset.v===t.it[0];
       if(ok){ b.classList.add('ok'); document.querySelectorAll('[data-act=pick]').forEach(x=>x.disabled=true); correct(b); }
-      else { wrong(b); setTimeout(()=>speakTask(),350); }
+      else { wrong(b); if(G.mode!=='rim') setTimeout(()=>speakTask(),350); }
     }
   }
 });
@@ -1352,7 +1357,7 @@ function allSpeech(){
   SQ.forEach(d=>{ add(d.n); add('You got '+d.n+'!'); add('It is '+d.cw[0]+'.'); });
   SENT.forEach(x=>add(x[0])); DIALOG.forEach(d=>{ add(d[0]); add(d[1],'k'); });
   THINGS.forEach(th=>{ add(`Where is the ${th[0]}?`); PLACES.forEach(pl=>Object.keys(PREPS).filter(p=>p!=='in'||pl[2]).forEach(p=>add(`The ${th[0]} is ${p} the ${pl[0]}.`))); });
-  RHYMES.forEach(f=>f.forEach(w=>{ add(w[0]); add(`Which word rhymes with ${w[0]}?`); }));
+  RHYMES.forEach(f=>f.forEach(w=>{ add(w[0]); add(`What rhymes with ${w[0]}?`); }));
   const seen=new Set(); return L.filter(x=>{ const k=akey(x.text,x.v); if(seen.has(k)) return false; seen.add(k); return true; });
 }
 
