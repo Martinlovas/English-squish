@@ -603,7 +603,10 @@ function silentWav(){ const n=400, b=new Uint8Array(44+n), v=new DataView(b.buff
   v.setUint32(24,8000,true); v.setUint32(28,8000,true); v.setUint16(32,1,true); v.setUint16(34,8,true); w(36,'data'); v.setUint32(40,n,true); b.fill(128,44);
   let s=''; b.forEach(x=>s+=String.fromCharCode(x)); return 'data:audio/wav;base64,'+btoa(s); }
 let audioUnlocked=false;
-document.addEventListener('pointerdown', ()=>{ if(audioUnlocked||!PLAYER) return; audioUnlocked=true; try{ if(!QBUSY){ PLAYER.src=silentWav(); const p=PLAYER.play(); if(p&&p.catch) p.catch(()=>{}); } }catch(e){} }, {capture:true});
+// Lås opp lyd på første trykk. iPad/iPhone godtar bare «slipp»-hendelser (touchend/click/pointerup), ikke pointerdown.
+const GESTURES=['touchend','pointerup','click','keydown'];
+function onGesture(fn){ const h=()=>{ let ok; try{ ok=fn(); }catch(e){} if(ok!==false) GESTURES.forEach(ev=>document.removeEventListener(ev,h,true)); }; GESTURES.forEach(ev=>document.addEventListener(ev,h,true)); }
+onGesture(()=>{ if(!PLAYER) return; if(QBUSY) return false; audioUnlocked=true; PLAYER.src=silentWav(); const p=PLAYER.play(); if(p&&p.catch) p.catch(()=>{}); try{ AC = AC || new (window.AudioContext||window.webkitAudioContext)(); if(AC.state==='suspended') AC.resume(); }catch(e){} });
 function stopAll(){ QGEN++; PQ=[]; QBUSY=false; try{ if(PLAYER){ PLAYER.onended=null; PLAYER.onerror=null; PLAYER.pause(); } }catch(e){} try{ speechSynthesis.cancel(); }catch(e){} }
 function runQ(){
   if(QBUSY) return; const n=PQ.shift(); if(!n) return; QBUSY=true; const gen=QGEN; let fired=false;
@@ -622,7 +625,7 @@ function say(t, queue, slow, v='t'){
 }
 
 let unlocked=false;
-document.addEventListener('pointerdown', ()=>{ if(unlocked||!HAS_TTS) return; unlocked=true; speakNow('.', true, 0); }, {capture:true});
+onGesture(()=>{ if(!HAS_TTS) return; unlocked=true; speakNow('.', true, 0); });
 function voiceStatus(){
   if(CLIPS) return `Naturlig stemme er lastet ned (${VOICE_NAMES.t} fra Microsoft, ${Object.keys(CLIPS).length} lydklipp). Velgeren under brukes bare til det som ikke har lydklipp.`;
   if(!HAS_TTS) return 'Denne appen eller nettleseren har ingen opplesing.';

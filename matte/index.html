@@ -328,7 +328,10 @@ function say(t, queue){
   }catch(e){}
 }
 let unlocked=false;
-document.addEventListener('pointerdown', ()=>{ if(unlocked||!HAS_TTS) return; unlocked=true; try{ const u=new SpeechSynthesisUtterance('.'); u.volume=0; speechSynthesis.speak(u);}catch(e){} }, {capture:true});
+// Lås opp lyd på første trykk. iPad/iPhone godtar bare «slipp»-hendelser (touchend/click/pointerup), ikke pointerdown.
+const GESTURES=['touchend','pointerup','click','keydown'];
+function onGesture(fn){ const h=()=>{ let ok; try{ ok=fn(); }catch(e){} if(ok!==false) GESTURES.forEach(ev=>document.removeEventListener(ev,h,true)); }; GESTURES.forEach(ev=>document.addEventListener(ev,h,true)); }
+onGesture(()=>{ try{ AC = AC || new (window.AudioContext||window.webkitAudioContext)(); if(AC.state==='suspended') AC.resume(); }catch(e){} if(!HAS_TTS) return; unlocked=true; try{ const u=new SpeechSynthesisUtterance('.'); u.volume=0; speechSynthesis.speak(u);}catch(e){} });
 
 // ---------- tegninger: klokke, brøk, former, tallinje, tellestreker, penger ----------
 function clockSVG(h,m){
