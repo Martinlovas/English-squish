@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ['audio/texts.json', 'tools/tts.mjs']
+    paths: ['audio/texts.json', 'tools/tts.mjs', '.github/workflows/lydfiler.yml']
 
 permissions:
   contents: write
@@ -25,8 +25,8 @@ jobs:
           node-version: 20
       - name: Lag lydfiler med Azure
         env:
-          AZURE_SPEECH_KEY: ${{ secrets.AZURE_SPEECH_KEY }}
-          AZURE_SPEECH_REGION: ${{ secrets.AZURE_SPEECH_REGION }}
+          AZURE_SPEECH_KEY: ${{ secrets.AZURE_SPEECH_KEY || vars.AZURE_SPEECH_KEY }}
+          AZURE_SPEECH_REGION: ${{ secrets.AZURE_SPEECH_REGION || vars.AZURE_SPEECH_REGION }}
         run: node tools/tts.mjs
       - name: Lagre lydfilene i repoet
         if: always()
