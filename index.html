@@ -843,7 +843,7 @@ function renderHome(){
   <div class="mgroup"><div class="label">Snakke</div>
   <div class="modes">
     <button class="mode m3" data-act="play" data-m="si"><span class="glyph">🎤 <small>red!</small></span><h3>Si det!</h3><p>Svar på engelsk med stemmen din</p></button>
-    <button class="mode m1" data-act="play" data-m="dialog"><span class="glyph">💬 <small>Hi!</small></span><h3>Spør og svar</h3><p>Hva svarer du når noen spør?</p></button>
+    <button class="mode m1" data-act="play" data-m="dialog"><span class="glyph">💬 <small>Hi!</small></span><h3>Spør og svar</h3><p>Hør spørsmålet og svar med stemmen din</p></button>
   </div></div>
   <div class="mgroup"><div class="label">Lese og skrive</div>
   <div class="modes">
@@ -960,6 +960,22 @@ const DIALOG = [
   ['When is your birthday?','It is in May.','Når har du bursdag?','Den er i mai.'],
   ['Have you got any brothers or sisters?','Yes, I have one brother.','Har du søsken?','Ja, jeg har én bror.']
 ];
+// Hva som godtas når hun svarer med stemmen (hennes eget svar, ikke bare eksempelet)
+const W_ = k => T[k].items.map(it=>it[0]).join('|').replace(/\s+/g,' ').toLowerCase();
+const NUMW = 'one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|\\d+';
+const YES = "yes|yeah|yep|yup|no|nope";
+const DLG_OK = [
+  `my name|name is|i am|i'm|im|^\\s*[a-z]+\\s*$`, `${NUMW}`, `fine|good|great|ok|okay|well|happy|tired|sad|not bad|super|excellent`,
+  `live|oslo|norway|nordstrand|in [a-z]+`, `${YES}|i do|i don't|i dont|love|like`, `${YES}|i can|can't|cant|cannot`,
+  `${YES}|pet|${W_('animals')}`, `${W_('colours')}`, `${W_('weather')}`, `${W_('days')}`,
+  `o'clock|oclock|half|past|quarter|${NUMW}`, `this is|${W_('family')}|teacher|friend`, `${W_('animals')}|horses|dogs|cats|ponies|pony`,
+  `${NUMW}|none|no`, `under|on|in|next to|behind|between`, `you're welcome|youre welcome|you are welcome|welcome|no problem`,
+  `that's ok|thats ok|it's ok|its ok|okay|ok|no problem|don't worry|dont worry|alright|it's fine|its fine|never mind`, `thank you|thanks`,
+  `good morning|morning`, `bye|goodbye|see you`, `${YES}|here you are|here you go|sure|of course|okay|ok`, `${YES}|i am|i'm|im|hungry`,
+  `please|${W_('food')}|pizza|sandwich|pasta|soup`, `${W_('months')}`, `${YES}|brother|sister|brothers|sisters|baby`
+].map(x=>new RegExp(`(^|\\s)(${x})s?(\\s|$)`));
+function dlgOK(alts, t){ const re=DLG_OK[DIALOG.indexOf(t.d)]; return alts.some(a=>re.test(norm(a))); }
+
 // Hvor er …? (preposisjoner)
 const THINGS = [['cat','🐱'],['dog','🐶'],['ball','⚽'],['teddy','🧸'],['mouse','🐭']];
 const PLACES = [['box','📦',true],['bag','🎒',true],['basket','🧺',true],['bed','🛏️',false],['chair','🪑',false]];
@@ -987,7 +1003,7 @@ function newTaskExtra(){
   if(G.mode==='setning'){ const s=choose(SENT, x=>'sent:'+x[0]), words=s[0].split(' ');
     return {key:'sent:'+s[0], s, words, pos:0, miss:0, tiles:shuffle(words.map((w,i)=>({w,i}))), usedT:[], showNo:false}; }
   if(G.mode==='dialog'){ const d=choose(DIALOG, x=>'dlg:'+x[0]); const others=shuffle(DIALOG.filter(x=>x!==d && x[1]!==d[1])).slice(0,2).map(x=>x[1]);
-    return {key:'dlg:'+d[0], d, opts:shuffle([d[1],...others]), showQ:false}; }
+    return {key:'dlg:'+d[0], d, opts:shuffle([d[1],...others]), showQ:false, tries:0, heard:'', hint:false, spoken:''}; }
   if(G.mode==='hvor'){ let th,pl,pr,key;
     for(let n=0;n<20;n++){ th=pick(THINGS); pl=pick(PLACES); const ok=Object.keys(PREPS).filter(p=>p!=='in'||pl[2]); pr=pick(ok); key=`hvor:${th[0]}:${pr}:${pl[0]}`; if(!G.used.has(key)) break; }
     G.used.add(key); const opts=Object.keys(PREPS).filter(p=>p!=='in'||pl[2]);
@@ -1025,10 +1041,18 @@ function renderExtra(){
       <div class="sentence" id="sent">${t.words.map((w,i)=>`<span class="sw-slot${i<t.pos?' on':''}">${i<t.pos?esc(w):''}</span>`).join('')}</div>
       <p class="qno">Trykk på ordene i riktig rekkefølge.</p><p class="fb" id="fb"></p></div>
     <div class="wtiles">${t.tiles.map((o,i)=>`<button class="wtile${t.usedT.includes(i)?' used':''}${t.miss>=3&&!t.usedT.includes(i)&&o.w===t.words[t.pos]&&t.tiles.findIndex((x,j)=>x.w===o.w&&!t.usedT.includes(j))===i?' hintme':''}" data-act="wtile" data-i="${i}">${esc(o.w)}</button>`).join('')}</div>`;
-  if(G.mode==='dialog') return `<div class="stage"><div class="chat"><span class="who">🧑‍🏫</span><div class="bubble">${hearRow(false)}${t.showQ?`<p class="eng">${esc(t.d[0])}</p><p class="qno">${esc(t.d[2])}</p>`:''}</div></div>
-      <button class="btn small soft" data-act="dq">${t.showQ?'Skjul spørsmålet':'Vis spørsmålet'}</button>
-      <p class="ask" style="font-size:19px">Hva svarer du?</p><p class="fb" id="fb"></p></div>
-    <div class="opts one">${t.opts.map(o=>`<button class="tile ans" data-act="pick" data-v="${esc(o)}"><span class="kid">🙋</span><span>${esc(o)}</span></button>`).join('')}</div>`;
+  if(G.mode==='dialog'){ const can = SRC && !micBlocked;
+    const top = `<div class="stage"><div class="chat"><span class="who">🧑‍🏫</span><div class="bubble">${hearRow(false)}${t.showQ?`<p class="eng">${esc(t.d[0])}</p><p class="qno">${esc(t.d[2])}</p>`:''}</div></div>
+      <button class="btn small soft" data-act="dq">${t.showQ?'Skjul spørsmålet':'Vis spørsmålet'}</button>`;
+    if(!can) return top+`<p class="ask" style="font-size:19px">Hva svarer du?</p><p class="fb" id="fb"></p></div>
+      <div class="opts one">${t.opts.map(o=>`<button class="tile ans" data-act="pick" data-v="${esc(o)}"><span class="kid">🙋</span><span>${esc(o)}</span></button>`).join('')}</div>`;
+    return top+`<p class="ask" style="font-size:19px">Svar med stemmen din!</p>
+      <button class="mic${listening?' on':''}" id="micbtn" data-act="mic" aria-label="Trykk og svar">${ICON.mic}</button>
+      <p class="status" id="status">${t.heard||'Trykk på mikrofonen og svar på engelsk.'}</p>
+      ${t.hint?`<div class="bubble" style="flex-direction:row;gap:10px"><span style="font-size:32px">🙋</span><div><p class="eng" style="font-size:20px">${esc(t.d[1])}</p><p class="qno">${esc(t.d[3])}</p></div></div>`:''}
+      <div class="foot" style="justify-content:center">${t.hint?`<button class="btn small soft" data-act="dsay">🔊 Hør forslaget</button>`:`<button class="btn small soft" data-act="dhint">💡 Vis forslag</button>`}
+        ${t.tries>=5?`<button class="btn small" data-act="skip">Neste</button>`:''}</div>
+      <p class="fb" id="fb"></p></div>`; }
   if(G.mode==='hvor') return `<div class="stage">${sceneHTML(t)}<p class="eng">${esc(t.q)}</p>${hearRow(false)}<p class="fb" id="fb"></p></div>
     <div class="opts ${t.opts.length===4?'four':'three'}">${t.opts.map(p=>`<button class="tile lab" data-act="pick" data-v="${esc(p)}"><span class="t big">${esc(p)} the ${t.pl[0]}</span><span class="t">${PREPS[p]}</span></button>`).join('')}</div>`;
   if(G.mode==='rim'){ const can = SRC && !micBlocked;
@@ -1044,7 +1068,8 @@ function correctExtra(){
   const t=G.task;
   if(G.mode==='stav'){ say(t.w); setFb(`${esc(t.w)} <span class="no">= ${esc(t.it[2])}</span>`); return 1700; }
   if(G.mode==='setning'){ say(t.s[0]); setFb(`${esc(t.s[0])} <span class="no">= ${esc(t.s[1])}</span>`); return 2400; }
-  if(G.mode==='dialog'){ say(t.d[1],false,false,'k'); setFb(`${esc(t.d[1])} <span class="no">= ${esc(t.d[3])}</span>`); return 2400; }
+  if(G.mode==='dialog'){ if(t.spoken){ setFb(`Du sa: «${esc(t.spoken)}» 👍<br><span class="no">Et annet svar: ${esc(t.d[1])}</span>`); return 2600; }
+    say(t.d[1],false,false,'k'); setFb(`${esc(t.d[1])} <span class="no">= ${esc(t.d[3])}</span>`); return 2400; }
   if(G.mode==='hvor'){ say(t.a); setFb(`${esc(t.a)}`); return 2200; }
   if(G.mode==='rim'){ say(t.match[0]); setFb(`${esc(t.target[0])} – ${esc(t.match[0])}`); return 2000; }
   return null;
@@ -1190,19 +1215,21 @@ function doListen(){
     alts = [...alts].reverse();
     const said = esc(alts[0]||'');
     const pool = G.mode==='rim' ? [...t.opts,t.target].map(o=>[o[0],o[1],'']) : T[t.k].items;
-    if(heardIt(alts, t.it, pool)){ t.heard = `Jeg hørte: <b>«${said}»</b>`; renderGame(); correct(document.getElementById('micbtn')); }
+    const okNow = G.mode==='dialog' ? dlgOK(alts,t) : heardIt(alts, t.it, pool);
+    if(okNow){ if(G.mode==='dialog') t.spoken=alts[0]||''; t.heard = `Jeg hørte: <b>«${said}»</b>`; renderGame(); correct(document.getElementById('micbtn')); }
     else { t.tries++; sfx.no();
-      if(t.tries>=5){ markMiss(); t.hint=true; say(word(t.it));
+      const helpSay=()=> G.mode==='dialog' ? say(t.d[1],false,false,'k') : say(word(t.it));
+      if(t.tries>=5){ markMiss(); t.hint=true; helpSay();
         t.heard = `Jeg hørte: <b>«${said}»</b>. Fem forsøk – ingen stjerne denne gangen. Hør ordet, si det gjerne igjen, eller trykk «Neste».`; }
       else { t.heard = `Jeg hørte: <b>«${said}»</b>. Prøv igjen! <span class="no">(${t.tries} av 5 forsøk)</span>`;
-        if(t.tries===3 && !t.hint){ t.hint=true; say(word(t.it)); } }
+        if(t.tries===3 && !t.hint){ t.hint=true; helpSay(); } }
       renderGame(); }
   }, err=>{
     if(G.task!==t || view!=='game') return;
     if(BLOCK_ERR.includes(err)){ micBlocked=true; toast('Mikrofonen er ikke tillatt her. Bruk «Jeg sa det!»'); }
     else t.heard = 'Jeg hørte ingenting. Trykk og prøv igjen, og si gjerne hele setningen.';
     renderGame();
-  }, partial=>heardIt(partial, t.it, G.mode==='rim' ? [...t.opts,t.target].map(o=>[o[0],o[1],'']) : T[t.k].items));
+  }, partial=> G.mode==='dialog' ? dlgOK(partial,t) : heardIt(partial, t.it, G.mode==='rim' ? [...t.opts,t.target].map(o=>[o[0],o[1],'']) : T[t.k].items));
 }
 
 function finishRound(){
@@ -1326,6 +1353,8 @@ app.addEventListener('click', e=>{
     else if(act==='text'){ t.showText=!t.showText; if(!t.showText) t.showNo=false; renderGame(); }
     else if(act==='textno'){ t.showNo=!t.showNo; renderGame(); }
     else if(act==='dq'){ t.showQ=!t.showQ; renderGame(); }
+    else if(act==='dsay'){ say(t.d[1],false,false,'k'); }
+    else if(act==='dhint'&&!G.busy){ markMiss(); t.hint=true; renderGame(); say(t.d[1],false,false,'k'); }
     else if(act==='mcard'){ flipCard(+b.dataset.i); }
     else if(G.busy) return;
     else if(act==='ltile'||act==='wtile'){
